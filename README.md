@@ -1,4 +1,4 @@
-# educannews
+# `edu|can|news`
 
 El objetivo de este proyecto es notificar las novedades que se van produciendo en la web de la **Consejería de Educación y Universidades** del Gobierno de Canarias.
 
