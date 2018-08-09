@@ -1,6 +1,28 @@
 import config
+import telegram
 from telegram.ext import Updater, CommandHandler
 from utils import add_chat, delete_chat
+
+
+def start(bot, update):
+    msg = f'''
+_¡Gracias sean dadas al Hacedor! Este baño de aceite me sentará muy bien. \
+Me ha entrado tal cantidad de polvo que apenas puedo moverme._
+
+No soy `C-3PO` pero sí un bot que puede hacerte la vida más fácil enviándote \
+las novedades de la *Consejería de Educación y Universidades* del *Gobierno \
+de Canarias* a tu Telegram de forma instantánea a cuando se publican en su \
+[web]({config.NEWS_URL}).
+
+*Comandos disponibles:*
+/register - te registrará en el sistema para recibir notificaciones.
+/unregister - te eliminará del sistema y dejarás de recibir notificaciones.
+    '''
+    bot.send_message(
+        chat_id=update.message.chat_id,
+        text=msg,
+        parse_mode=telegram.ParseMode.MARKDOWN
+    )
 
 
 def register(bot, update):
@@ -34,6 +56,7 @@ def unregister(bot, update):
 updater = Updater(config.BOT_TOKEN)
 dp = updater.dispatcher
 
+dp.add_handler(CommandHandler('start', start))
 dp.add_handler(CommandHandler('register', register))
 dp.add_handler(CommandHandler('unregister', unregister))
 
