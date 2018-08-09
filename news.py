@@ -88,9 +88,10 @@ class News:
 
     def send_news(self):
         if self.news:
-            for user_id in config.USER_IDS:
+            self.dbcur.execute("select telegram_id from chat")
+            for chat_id in [r[0] for r in self.dbcur.fetchall()]:
                 self.bot.send_message(
-                    chat_id=int(user_id),
+                    chat_id=int(chat_id),
                     text=self.news2markdown(),
                     parse_mode=telegram.ParseMode.MARKDOWN
                 )

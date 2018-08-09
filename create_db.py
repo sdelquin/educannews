@@ -16,10 +16,18 @@ If you continue it will be DESTROYED!! Continue? [y/N] ''', end='')
 
 conn = sqlite3.connect(db)
 c = conn.cursor()
+# table of news
 c.execute(
     '''
     CREATE TABLE news
     (title text, date text, url text, category text, saved_at datetime)
+    '''
+)
+# table of registered chats
+c.execute(
+    '''
+    CREATE TABLE chat
+    (telegram_id text primary key, name text, registered_at datetime)
     '''
 )
 conn.commit()

@@ -1,5 +1,5 @@
 from news import News
 
-n = News()
-n.get_news()
-n.send_news()
+educan_news = News()
+educan_news.get_news()
+educan_news.send_news()
