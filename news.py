@@ -7,6 +7,7 @@ import sqlite3
 import datetime
 import config
 import telegram
+from urllib.parse import urljoin
 
 
 class News:
@@ -30,7 +31,8 @@ class News:
         for news in all_news[::-1]:
             a = news.h3.a
             spans = a.find_all('span')
-            url = a['href'].strip()
+            # ensure url is absolute
+            url = urljoin(config.NEWS_URL, a['href'].strip())
             date, category = (
                 t.strip() for t in
                 re.search(r'\[(.*)\].*\[(.*)\]', spans[0].string).groups()
