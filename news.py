@@ -6,6 +6,7 @@ import os
 import sqlite3
 import datetime
 import config
+import telegram
 
 
 class News:
@@ -13,6 +14,7 @@ class News:
         self.url = config.NEWS_URL
         self.dbconn = sqlite3.connect(config.DATABASE)
         self.dbcur = self.dbconn.cursor()
+        self.bot = telegram.Bot(token=config.BOT_TOKEN)
 
     def __str__(self):
         return pprint.pformat(self.news, indent=4)
@@ -79,3 +81,12 @@ class News:
         for news in self.news:
             md.append(f'[{news["title"]}]({news["url"]})')
         return os.linesep.join(md)
+
+    def send_news(self):
+        if self.news:
+            for user_id in config.USER_IDS:
+                self.bot.send_message(
+                    chat_id=int(user_id),
+                    text=self.news2markdown(),
+                    parse_mode=telegram.ParseMode.MARKDOWN
+                )
