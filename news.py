@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import pprint
+import os
 
 
 class News:
@@ -34,3 +35,9 @@ class News:
                 'category': category,
                 'title': title
             })
+
+    def news2markdown(self):
+        md = []
+        for news in self.news:
+            md.append(f'[{news["title"]}]({news["url"]})')
+        return os.linesep.join(md)
