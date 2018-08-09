@@ -79,8 +79,10 @@ class News:
     def news2markdown(self):
         md = []
         for news in self.news:
-            md.append(f'[{news["title"]}]({news["url"]})')
-        return os.linesep.join(md)
+            md.append(
+                f'➡️ [{news["title"]}]({news["url"]}) ({news["category"]})'
+            )
+        return (os.linesep * 2).join(md)
 
     def send_news(self):
         if self.news:
