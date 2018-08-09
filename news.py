@@ -60,7 +60,7 @@ class News:
             self.dbcur.execute(f'''delete from news where rowid =
                 (select min(rowid) from news)
             ''')
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%f')
         self.dbcur.execute(f'''insert into news values (
             '{news["title"]}',
             '{news["date"]}',
