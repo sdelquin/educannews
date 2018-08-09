@@ -6,7 +6,7 @@ c = conn.cursor()
 c.execute(
     '''
     CREATE TABLE news
-    (title text, date text, url text, category text)
+    (title text, date text, url text, category text, saved_at datetime)
     '''
 )
 conn.commit()

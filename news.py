@@ -4,6 +4,7 @@ import re
 import pprint
 import os
 import sqlite3
+import datetime
 
 
 class News:
@@ -53,11 +54,13 @@ class News:
         return self.dbcur.fetchone()
 
     def save_news(self, news):
+        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.dbcur.execute(f'''insert into news values (
             '{news["title"]}',
             '{news["date"]}',
             '{news["url"]}',
-            '{news["category"]}'
+            '{news["category"]}',
+            '{now}'
         )''')
         self.dbconn.commit()
 
