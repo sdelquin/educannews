@@ -39,6 +39,9 @@ class News:
                 re.search(r'\[(.*)\].*\[(.*)\]', spans[0].string).groups()
             )
             title = spans[1].string.strip()
+            # remove dots at the right
+            category = utils.rstripwithdots(category)
+            title = utils.rstripwithdots(title)
 
             current_news = {
                 'url': url,
@@ -84,7 +87,7 @@ class News:
         for news in self.news:
             category = utils.hash_category(news['category'])
             md.append(
-                f'➡️ [{news["title"]}]({news["url"]}) {category}'
+                f'➡️ [{news["title"]}.]({news["url"]}) {category}'
             )
         return (os.linesep * 2).join(md)
 

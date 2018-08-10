@@ -32,3 +32,7 @@ def delete_chat(chat):
 
 def hash_category(category):
     return '#' + re.sub(r',\s*|\s+', '', category.title())
+
+
+def rstripwithdots(text):
+    return re.sub(r'[\s.]+$', '', text)

@@ -1,7 +1,7 @@
 import config
 import telegram
 from telegram.ext import Updater, CommandHandler
-from utils import add_chat, delete_chat
+import utils
 
 
 def start(bot, update):
@@ -27,7 +27,7 @@ de Canarias* a tu Telegram de forma instantánea a cuando se publican en su \
 
 def register(bot, update):
     chat = update.message.chat
-    if add_chat(chat):
+    if utils.add_chat(chat):
         msg = ('✅ You have been successfuly REGISTERED '
                'to receive notifications!')
     else:
@@ -41,7 +41,7 @@ def register(bot, update):
 
 def unregister(bot, update):
     chat = update.message.chat
-    if delete_chat(chat):
+    if utils.delete_chat(chat):
         msg = ('✅ You have been successfuly UNREGISTERED '
                'from receiving notifications!')
     else:
