@@ -1,5 +1,4 @@
 #!/bin/bash
 
 cd "$(dirname "$0")"
-source $(pipenv --venv)/bin/activate
-exec python main.py
+exec pipenv run python $1.py
