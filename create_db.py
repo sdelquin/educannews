@@ -23,12 +23,5 @@ c.execute(
     (title text, date text, url text, category text, saved_at datetime)
     '''
 )
-# table of registered chats
-c.execute(
-    '''
-    CREATE TABLE chat
-    (telegram_id text primary key, name text, registered_at datetime)
-    '''
-)
 conn.commit()
 conn.close()
