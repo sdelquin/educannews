@@ -16,6 +16,6 @@ BOT_TOKEN = config(
     default='put here the token of your bot'
 )
 CHANNEL_NAME = config(
-    'CHANNEL_ID',
+    'CHANNEL_NAME',
     default='put here the telegram name of the channel (with @)'
 )
