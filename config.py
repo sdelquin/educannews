@@ -19,3 +19,12 @@ CHANNEL_NAME = config(
     'CHANNEL_NAME',
     default='put here the telegram name of the channel (with @)'
 )
+LOGFILE = config(
+    'LOGFILE',
+    default='educannews.log'
+)
+LOGFILE_MAX_SIZE = config(
+    'LOGFILE_MAX_SIZE',
+    default='1048576',
+    cast=config.eval
+)
