@@ -9,12 +9,14 @@ def add_chat(chat):
     cur = conn.cursor()
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%f')
     if chat.title:
-        long_name = chat.title
+        name = chat.title
+    elif chat.last_name:
+        name = f'{chat.first_name} {chat.last_name}'
     else:
-        long_name = f'{chat.first_name} {chat.last_name}'
+        name = f'{chat.first_name}'
     try:
         cur.execute(f'''insert into chat values (
-            '{chat.id}', '{long_name}', '{now}'
+            '{chat.id}', '{name}', '{now}'
         )''')
     except sqlite3.IntegrityError:
         return False
