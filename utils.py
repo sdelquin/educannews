@@ -1,6 +1,7 @@
 import sqlite3
 import datetime
 import config
+import re
 
 
 def add_chat(chat):
@@ -27,3 +28,7 @@ def delete_chat(chat):
     result = cur.execute(f"delete from chat where telegram_id = '{chat.id}'")
     conn.commit()
     return result.rowcount > 0
+
+
+def hash_category(category):
+    return '#' + re.sub(r',\s*|\s+', '', category.title())

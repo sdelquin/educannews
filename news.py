@@ -8,6 +8,7 @@ import datetime
 import config
 import telegram
 from urllib.parse import urljoin
+import utils
 
 
 class News:
@@ -81,8 +82,9 @@ class News:
     def news2markdown(self):
         md = []
         for news in self.news:
+            category = utils.hash_category(news['category'])
             md.append(
-                f'➡️ [{news["title"]}]({news["url"]}) ({news["category"]})'
+                f'➡️ [{news["title"]}]({news["url"]}) {category}'
             )
         return (os.linesep * 2).join(md)
 
