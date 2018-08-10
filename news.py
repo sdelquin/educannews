@@ -100,7 +100,7 @@ class News:
         for news in self.news:
             category = utils.hash_category(news['category'])
             md.append(
-                f'➡️ [{news["title"]}.]({news["url"]}) {category}'
+                f'[{news["title"]}.]({news["url"]}) {category}'
             )
         return (os.linesep * 2).join(md)
 
