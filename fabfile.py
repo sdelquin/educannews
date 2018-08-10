@@ -8,3 +8,5 @@ def deploy():
     with cd('~/educannews'):
         run('git pull')
         run('pipenv install')
+        # supctl is just an alias (with settings) to supervisorctl
+        run('supctl restart educannews')
