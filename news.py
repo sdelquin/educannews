@@ -2,25 +2,74 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import pprint
-import os
 import sqlite3
 import datetime
 import config
 import telegram
 from urllib.parse import urljoin
 import utils
+import time
 
 
 logger = utils.init_logger(__name__)
+
+dbconn = sqlite3.connect(config.DATABASE)
+dbcur = dbconn.cursor()
+bot = telegram.Bot(token=config.BOT_TOKEN)
+
+
+class NewsItem:
+    def __init__(self, url, date, category, title):
+        self.url = url
+        self.date = date
+        self.category = category
+        self.title = title
+
+    def __str__(self):
+        return self.title
+
+    def is_already_saved(self):
+        dbcur.execute(f'''select * from news where
+            (title='{self.title}') and
+            (date='{self.date}') and
+            (url='{self.url}') and
+            (category='{self.category}')
+        ''')
+        return dbcur.fetchone()
+
+    def save(self):
+        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%f')
+        logger.info(f'Saving: {self}')
+        dbcur.execute(f'''insert into news values (
+            '{self.title}',
+            '{self.date}',
+            '{self.url}',
+            '{self.category}',
+            '{now}'
+        )''')
+        dbconn.commit()
+
+    @property
+    def category_as_hash(self):
+        return '#' + re.sub(r'\s*,\s*|\s+', '', self.category.title())
+
+    @property
+    def as_markdown(self):
+        return f'[{self.title}.]({self.url}) {self.category_as_hash}'
+
+    def send(self):
+        logger.info(f'Sending {self}')
+        bot.send_message(
+            chat_id=config.CHANNEL_NAME,
+            text=self.as_markdown,
+            parse_mode=telegram.ParseMode.MARKDOWN
+        )
 
 
 class News:
     def __init__(self):
         logger.info('Building News object...')
         self.url = config.NEWS_URL
-        self.dbconn = sqlite3.connect(config.DATABASE)
-        self.dbcur = self.dbconn.cursor()
-        self.bot = telegram.Bot(token=config.BOT_TOKEN)
 
     def __str__(self):
         return pprint.pformat(self.news, indent=4)
@@ -49,69 +98,35 @@ class News:
             category = utils.rstripwithdots(category)
             title = utils.rstripwithdots(title)
 
-            current_news = {
-                'url': url,
-                'date': date,
-                'category': category,
-                'title': title
-            }
-            if self.check_if_news_on_db(current_news):
-                logger.info(
-                    f'Ignoring already checked: {current_news["title"]}'
-                )
+            # manage current news item
+            news_item = NewsItem(url, date, category, title)
+            if news_item.is_already_saved():
+                logger.info(f'Ignoring already checked: {news_item}')
             else:
-                self.news.append(current_news)
-                self.save_news(current_news)
+                self.news.append(news_item)
+                if self.max_news_on_db_reached():
+                    logger.warning('Reached max news in database. Rotating...')
+                    self.rotate_db()
+                news_item.save()
 
-    def check_if_news_on_db(self, news):
-        self.dbcur.execute(f'''select * from news where
-            (title='{news["title"]}') and
-            (date='{news["date"]}') and
-            (url='{news["url"]}') and
-            (category='{news["category"]}')
+    def max_news_on_db_reached(self):
+        return self.num_news_on_db == config.MAX_NEWS_TO_SAVE_ON_DB
+
+    @property
+    def num_news_on_db(self):
+        dbcur.execute("select count(*) from news")
+        return dbcur.fetchone()[0]
+
+    def rotate_db(self):
+        # delete first saved news
+        dbcur.execute(f'''delete from news where rowid =
+            (select min(rowid) from news)
         ''')
-        return self.dbcur.fetchone()
-
-    def save_news(self, news):
-        if self.get_num_news_on_db() == config.MAX_NEWS_TO_SAVE_ON_DB:
-            logger.warning('Reached max window size in database. Rotating...')
-            # delete first saved news
-            self.dbcur.execute(f'''delete from news where rowid =
-                (select min(rowid) from news)
-            ''')
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%f')
-        logger.info(f'Saving: {news["title"]}')
-        self.dbcur.execute(f'''insert into news values (
-            '{news["title"]}',
-            '{news["date"]}',
-            '{news["url"]}',
-            '{news["category"]}',
-            '{now}'
-        )''')
-        self.dbconn.commit()
-
-    def get_num_news_on_db(self):
-        self.dbcur.execute("select count(*) from news")
-        return self.dbcur.fetchone()[0]
-
-    def news2markdown(self):
-        logger.info('Converting news to markdown...')
-        md = []
-        for news in self.news:
-            category = utils.hash_category(news['category'])
-            md.append(
-                f'[{news["title"]}.]({news["url"]}) {category}'
-            )
-        return (os.linesep * 2).join(md)
 
     def send_news(self):
         if self.news:
-            msg = self.news2markdown()
-            logger.info(f'Sending {len(self.news)} saved news...')
-            self.bot.send_message(
-                chat_id=config.CHANNEL_NAME,
-                text=msg,
-                parse_mode=telegram.ParseMode.MARKDOWN
-            )
+            for news_item in self.news:
+                news_item.send()
+                time.sleep(0.1)
         else:
             logger.info('No news! Good news!')
