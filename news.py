@@ -58,7 +58,7 @@ class NewsItem:
         return f'[{self.title}.]({self.url}) {self.category_as_hash}'
 
     def send(self):
-        logger.info(f'Sending {self}')
+        logger.info(f'Sending: {self}')
         bot.send_message(
             chat_id=config.CHANNEL_NAME,
             text=self.as_markdown,
@@ -127,6 +127,7 @@ class News:
         if self.news:
             for news_item in self.news:
                 news_item.send()
+                # ensure dispatching in right order
                 time.sleep(0.1)
         else:
             logger.info('No news! Good news!')
