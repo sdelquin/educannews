@@ -1,8 +1,10 @@
 import sqlite3
-import config
 import os
 import sys
+
 import crayons
+
+import config
 
 db = config.DATABASE
 

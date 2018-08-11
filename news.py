@@ -1,14 +1,16 @@
-import requests
-from bs4 import BeautifulSoup
 import re
 import pprint
 import sqlite3
 import datetime
-import config
-import telegram
 from urllib.parse import urljoin
-import utils
 import time
+
+import requests
+from bs4 import BeautifulSoup
+import telegram
+
+import utils
+import config
 
 
 logger = utils.init_logger(__name__)
