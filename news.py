@@ -79,7 +79,7 @@ class NewsItem:
         return f'[{self.title}.]({self.url}) {self.category_as_hash}'
 
     def send_msg(self):
-        logger.info(f'Sending: {self}')
+        logger.info(f'Sending telegram message: {self}')
         return bot.send_message(
             chat_id=config.CHANNEL_NAME,
             text=self.as_markdown,
@@ -88,7 +88,7 @@ class NewsItem:
         )
 
     def edit_msg(self):
-        logger.info(f'Editing: {self}')
+        logger.info(f'Editing telegram message: {self}')
         return bot.edit_message_text(
             chat_id=config.CHANNEL_NAME,
             message_id=self.tg_msg_id,
@@ -100,7 +100,7 @@ class NewsItem:
 
 class News:
     def __init__(self):
-        logger.info('Building News object...')
+        logger.info('Building News object')
         self.url = config.NEWS_URL
 
     def __str__(self):
@@ -110,7 +110,7 @@ class News:
         return os.linesep.join(buffer)
 
     def get_news(self):
-        logger.info('Getting news from web...')
+        logger.info('Getting news from web')
         self.news = []
         result = requests.get(self.url)
         soup = BeautifulSoup(result.content, features='html.parser')
@@ -118,7 +118,7 @@ class News:
             'form', 'frm_bloque_novedades_categorizadas'
         ).parent
         all_news = content.find_all('div', 'noticia')
-        logger.info('Parsing downloaded news...')
+        logger.info('Parsing downloaded news')
         for news in reversed(all_news):
             a = news.h3.a
             spans = a.find_all('span')
@@ -137,6 +137,7 @@ class News:
         self._sift_news()
 
     def _sift_news(self):
+        logger.info('Sifting news')
         self.news, news = [], self.news[:]
         for news_item in news:
             r = news_item.is_already_saved()
@@ -165,7 +166,7 @@ class News:
 
     def check_db_overflow(self):
         if self.max_news_on_db_reached():
-            logger.warning('Reached max news in database. Rotating...')
+            logger.warning('Reached max news in database. Rotating')
             self.rotate_db()
 
     def send_news(self):
