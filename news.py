@@ -178,14 +178,14 @@ class News:
             logger.warning('Reached max news in database. Rotating')
             self.rotate_db()
 
-    def send_news(self):
+    def dispatch_news(self):
         for news_item in self.news:
             if news_item.tg_msg_id:
                 news_item.edit_msg()
                 news_item.update_on_db()
             else:
-                self.check_db_overflow()
                 msg = news_item.send_msg()
+                self.check_db_overflow()
                 news_item.save_on_db(msg.message_id)
             # ensure dispatching in right order and avoid timeout issues
             time.sleep(0.5)
