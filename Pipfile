@@ -15,6 +15,7 @@ ipython = "*"
 "flake8" = "*"
 rope = "*"
 "fabric3" = "*"
+"autopep8" = "*"
 
 [requires]
 python_version = "3.6"
