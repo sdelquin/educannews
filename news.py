@@ -90,6 +90,9 @@ class NewsItem:
             )
         except telegram.error.BadRequest:
             logger.exception('Ups! Something went wrong')
+        except telegram.error.TimedOut:
+            # message could be correctly delivered: https://goo.gl/TZ7kGR
+            logger.exception('Ups! Something went wrong')
         return m
 
     def edit_msg(self):
@@ -104,6 +107,8 @@ class NewsItem:
                 disable_web_page_preview=False
             )
         except telegram.error.BadRequest:
+            logger.exception('Ups! Something went wrong')
+        except telegram.error.TimedOut:
             logger.exception('Ups! Something went wrong')
         return m
 
