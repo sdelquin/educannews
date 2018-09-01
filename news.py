@@ -80,22 +80,32 @@ class NewsItem:
 
     def send_msg(self):
         logger.info(f'Sending telegram message: {self}')
-        return bot.send_message(
-            chat_id=config.CHANNEL_NAME,
-            text=self.as_markdown,
-            parse_mode=telegram.ParseMode.MARKDOWN,
-            disable_web_page_preview=False
-        )
+        m = None
+        try:
+            m = bot.send_message(
+                chat_id=config.CHANNEL_NAME,
+                text=self.as_markdown,
+                parse_mode=telegram.ParseMode.MARKDOWN,
+                disable_web_page_preview=False
+            )
+        except telegram.error.BadRequest:
+            logger.exception('Ups! Something went wrong')
+        return m
 
     def edit_msg(self):
         logger.info(f'Editing telegram message: {self}')
-        return bot.edit_message_text(
-            chat_id=config.CHANNEL_NAME,
-            message_id=self.tg_msg_id,
-            text=self.as_markdown + ' #editado',
-            parse_mode=telegram.ParseMode.MARKDOWN,
-            disable_web_page_preview=False
-        )
+        m = None
+        try:
+            m = bot.edit_message_text(
+                chat_id=config.CHANNEL_NAME,
+                message_id=self.tg_msg_id,
+                text=self.as_markdown + ' #editado',
+                parse_mode=telegram.ParseMode.MARKDOWN,
+                disable_web_page_preview=False
+            )
+        except telegram.error.BadRequest:
+            logger.exception('Ups! Something went wrong')
+        return m
 
 
 class News:
@@ -181,11 +191,12 @@ class News:
     def dispatch_news(self):
         for news_item in self.news:
             if news_item.tg_msg_id:
-                news_item.edit_msg()
-                news_item.update_on_db()
+                if news_item.edit_msg():
+                    news_item.update_on_db()
             else:
                 msg = news_item.send_msg()
-                self.check_db_overflow()
-                news_item.save_on_db(msg.message_id)
+                if msg:
+                    self.check_db_overflow()
+                    news_item.save_on_db(msg.message_id)
             # ensure dispatching in right order and avoid timeout issues
             time.sleep(0.5)
