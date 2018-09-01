@@ -9,11 +9,12 @@ import requests
 from bs4 import BeautifulSoup
 import telegram
 
+import log
 import utils
 import config
 
 
-logger = utils.init_logger(__name__)
+logger = log.init_logger(__name__)
 
 
 def dict_factory(cursor, row):
