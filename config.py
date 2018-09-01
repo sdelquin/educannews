@@ -11,6 +11,11 @@ MAX_NEWS_TO_SAVE_ON_DB = config(
     default='100',
     cast=config.eval
 )
+ROUGH_NUM_NEWS_ON_FRONTPAGE = config(
+    'ROUGH_NUM_NEWS_ON_FRONTPAGE',
+    default='10',
+    cast=config.eval
+)
 BOT_TOKEN = config(
     'BOT_TOKEN',
     default='put here the token of your bot'

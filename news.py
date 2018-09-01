@@ -102,6 +102,13 @@ class News:
     def __init__(self):
         logger.info('Building News object')
         self.url = config.NEWS_URL
+        self.num_news_to_delete_when_rotating_db = \
+            self._get_num_news_to_delete_when_rotating_db()
+
+    def _get_num_news_to_delete_when_rotating_db(self):
+        return 1 if config.MAX_NEWS_TO_SAVE_ON_DB <= 2 * \
+            config.ROUGH_NUM_NEWS_ON_FRONTPAGE else \
+            config.MAX_NEWS_TO_SAVE_ON_DB // 2
 
     def __str__(self):
         buffer = []
@@ -159,10 +166,12 @@ class News:
         return dbcur.fetchone()['size']
 
     def rotate_db(self):
-        # delete first saved news
-        dbcur.execute(f'''delete from news where rowid =
-            (select min(rowid) from news)
+        dbcur.execute(f'''
+            delete from news where rowid in
+            (select rowid from news order by rowid limit
+            {self.num_news_to_delete_when_rotating_db})
         ''')
+        dbconn.commit()
 
     def check_db_overflow(self):
         if self.max_news_on_db_reached():
@@ -175,8 +184,8 @@ class News:
                 news_item.edit_msg()
                 news_item.update_on_db()
             else:
+                self.check_db_overflow()
                 msg = news_item.send_msg()
                 news_item.save_on_db(msg.message_id)
-                self.check_db_overflow()
             # ensure dispatching in right order and avoid timeout issues
             time.sleep(0.5)
