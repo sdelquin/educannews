@@ -1,5 +1,5 @@
 .vscode
 *.pyc
-*.db
 .env
 *.log
+*.db*
