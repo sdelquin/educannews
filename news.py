@@ -204,4 +204,4 @@ class News:
                     self.check_db_overflow()
                     news_item.save_on_db(msg.message_id)
             # ensure dispatching in right order and avoid timeout issues
-            time.sleep(0.5)
+            time.sleep(config.DELAY_BETWEEN_TELEGRAM_DELIVERIES)

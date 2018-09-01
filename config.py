@@ -24,3 +24,8 @@ CHANNEL_NAME = config(
     'CHANNEL_NAME',
     default='put here the telegram name of the channel (with @)'
 )
+DELAY_BETWEEN_TELEGRAM_DELIVERIES = config(     # in seconds
+    'DELAY_BETWEEN_TELEGRAM_DELIVERIES',
+    default='1',
+    cast=config.eval
+)
