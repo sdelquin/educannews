@@ -1,5 +1,4 @@
 import re
-import sqlite3
 import datetime
 from urllib.parse import urljoin
 import time
@@ -17,42 +16,33 @@ import config
 logger = log.init_logger(__name__)
 
 
-def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
-
-
-dbconn = sqlite3.connect(config.DATABASE)
-dbconn.row_factory = dict_factory
-dbcur = dbconn.cursor()
-bot = telegram.Bot(token=config.BOT_TOKEN)
-
-
 class NewsItem:
-    def __init__(self, url, date, category, title):
+    def __init__(self, url, date, category, title, dbconn, dbcur):
         self.url = url
         self.date = date
         self.category = category
         self.title = title
         self.tg_msg_id = None
 
+        self.dbconn = dbconn
+        self.dbcur = dbcur
+        self.bot = telegram.Bot(token=config.BOT_TOKEN)
+
     def __str__(self):
         return self.title
 
     def is_already_saved(self):
         # retrieve last seen news-item with the same title (ignore case)
-        dbcur.execute(
+        self.dbcur.execute(
             (f"select * from news where title='{self.title}' "
              "collate nocase order by rowid desc")
         )
-        return dbcur.fetchone()
+        return self.dbcur.fetchone()
 
     def save_on_db(self, tg_msg_id):
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%f')
         logger.info(f'Saving on DB: {self}')
-        dbcur.execute(f'''insert into news values (
+        self.dbcur.execute(f'''insert into news values (
             '{self.title}',
             '{self.date}',
             '{self.url}',
@@ -60,15 +50,15 @@ class NewsItem:
             '{now}',
             {tg_msg_id}
         )''')
-        dbconn.commit()
+        self.dbconn.commit()
 
     def update_on_db(self, fields=['url']):
         logger.info(f'Updating on DB: {self}')
         set_expr = ', '.join([f"{f} = '{getattr(self, f)}'" for f in fields])
-        dbcur.execute(
+        self.dbcur.execute(
             f"update news set {set_expr} where tg_msg_id = {self.tg_msg_id}"
         )
-        dbconn.commit()
+        self.dbconn.commit()
 
     @property
     def category_as_hash(self):
@@ -82,7 +72,7 @@ class NewsItem:
         logger.info(f'Sending telegram message: {self}')
         m = None
         try:
-            m = bot.send_message(
+            m = self.bot.send_message(
                 chat_id=config.CHANNEL_NAME,
                 text=self.as_markdown,
                 parse_mode=telegram.ParseMode.MARKDOWN,
@@ -99,7 +89,7 @@ class NewsItem:
         logger.info(f'Editing telegram message: {self}')
         m = None
         try:
-            m = bot.edit_message_text(
+            m = self.bot.edit_message_text(
                 chat_id=config.CHANNEL_NAME,
                 message_id=self.tg_msg_id,
                 text=self.as_markdown + ' #editado',
@@ -114,11 +104,14 @@ class NewsItem:
 
 
 class News:
-    def __init__(self):
+    def __init__(self, dbconn, dbcur):
         logger.info('Building News object')
         self.url = config.NEWS_URL
         self.num_news_to_delete_when_rotating_db = \
             self._get_num_news_to_delete_when_rotating_db()
+
+        self.dbconn = dbconn
+        self.dbcur = dbcur
 
     def _get_num_news_to_delete_when_rotating_db(self):
         return 1 if config.MAX_NEWS_TO_SAVE_ON_DB <= 2 * \
@@ -155,7 +148,8 @@ class News:
             category = utils.rstripwithdots(category)
             title = utils.rstripwithdots(title)
 
-            self.news.append(NewsItem(url, date, category, title))
+            self.news.append(NewsItem(url, date, category,
+                                      title, self.dbconn, self.dbcur))
         self._sift_news()
 
     def _sift_news(self):
@@ -177,16 +171,16 @@ class News:
 
     @property
     def num_news_on_db(self):
-        dbcur.execute("select count(*) as size from news")
-        return dbcur.fetchone()['size']
+        self.dbcur.execute("select count(*) as size from news")
+        return self.dbcur.fetchone()['size']
 
     def rotate_db(self):
-        dbcur.execute(f'''
+        self.dbcur.execute(f'''
             delete from news where rowid in
             (select rowid from news order by rowid limit
             {self.num_news_to_delete_when_rotating_db})
         ''')
-        dbconn.commit()
+        self.dbconn.commit()
 
     def check_db_overflow(self):
         if self.max_news_on_db_reached():
