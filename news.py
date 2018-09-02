@@ -36,7 +36,7 @@ class News:
             buffer.append(f'{i + 1}) {news_item}')
         return os.linesep.join(buffer)
 
-    def get_news(self):
+    def get_news(self, max_news_to_retrieve=None):
         logger.info('Getting news from web')
         self.news = []
         result = requests.get(self.url)
@@ -46,7 +46,7 @@ class News:
         ).parent
         all_news = content.find_all('div', 'noticia')
         logger.info('Parsing downloaded news')
-        for news in reversed(all_news):
+        for news in list(reversed(all_news))[:max_news_to_retrieve]:
             a = news.h3.a
             spans = a.find_all('span')
             # ensure url is absolute
