@@ -29,7 +29,7 @@ $ pipenv install
 Crear la *base de datos*:
 
 ~~~console
-$ pipenv run python create_db.py
+$ pipenv run python educannews.py createdb
 ~~~
 > `news.db` will appear in current directory
 
@@ -41,18 +41,10 @@ $ vi .env
 
 > Esto sobreescribirá variables del fichero `config.py`
 
-### Bot
-
-Para lanzar el bot:
-
-~~~console
-$ pipenv run python bot.py
-~~~
-
 ### Notify
 
 Para lanzar el notificador:
 
 ~~~console
-$ pipenv run python notify.py
+$ pipenv run python educannews.py notify
 ~~~
