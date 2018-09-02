@@ -1,5 +1,6 @@
 import re
 import datetime
+import time
 
 import telegram
 
@@ -62,35 +63,43 @@ class NewsItem:
         return f'[{self.title}.]({self.url}) {self.category_as_hash}'
 
     def send_msg(self):
-        logger.info(f'Sending telegram message: {self}')
-        m = None
-        try:
-            m = self.bot.send_message(
-                chat_id=config.CHANNEL_NAME,
-                text=self.as_markdown,
-                parse_mode=telegram.ParseMode.MARKDOWN,
-                disable_web_page_preview=False
-            )
-        except telegram.error.BadRequest:
-            logger.exception('Ups! Something went wrong')
-        except telegram.error.TimedOut:
-            # message could be correctly delivered: https://goo.gl/TZ7kGR
-            logger.exception('Ups! Something went wrong')
+        m, retry = None, 0
+        while (not m) and (retry <= config.NUM_TELEGRAM_RETRIES):
+            retry_msg = f' (retry {retry})' if retry else ''
+            logger.info(f'Sending telegram message{retry_msg}: {self}')
+            try:
+                m = self.bot.send_message(
+                    chat_id=config.CHANNEL_NAME,
+                    text=self.as_markdown,
+                    parse_mode=telegram.ParseMode.MARKDOWN,
+                    disable_web_page_preview=False
+                )
+            except telegram.error.BadRequest:
+                logger.exception('Ups! Something went wrong')
+            except telegram.error.TimedOut:
+                # message could be correctly delivered: https://goo.gl/TZ7kGR
+                logger.exception('Ups! Something went wrong')
+                retry += 1
+                time.sleep(config.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
         return m
 
     def edit_msg(self):
-        logger.info(f'Editing telegram message: {self}')
-        m = None
-        try:
-            m = self.bot.edit_message_text(
-                chat_id=config.CHANNEL_NAME,
-                message_id=self.tg_msg_id,
-                text=self.as_markdown + ' #editado',
-                parse_mode=telegram.ParseMode.MARKDOWN,
-                disable_web_page_preview=False
-            )
-        except telegram.error.BadRequest:
-            logger.exception('Ups! Something went wrong')
-        except telegram.error.TimedOut:
-            logger.exception('Ups! Something went wrong')
+        m, retry = None, 0
+        while (not m) and (retry <= config.NUM_TELEGRAM_RETRIES):
+            retry_msg = f' (retry {retry})' if retry else ''
+            logger.info(f'Editing telegram message{retry_msg}: {self}')
+            try:
+                m = self.bot.edit_message_text(
+                    chat_id=config.CHANNEL_NAME,
+                    message_id=self.tg_msg_id,
+                    text=self.as_markdown + ' #editado',
+                    parse_mode=telegram.ParseMode.MARKDOWN,
+                    disable_web_page_preview=False
+                )
+            except telegram.error.BadRequest:
+                logger.exception('Ups! Something went wrong')
+            except telegram.error.TimedOut:
+                logger.exception('Ups! Something went wrong')
+                retry += 1
+                time.sleep(config.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
         return m

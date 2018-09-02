@@ -29,3 +29,8 @@ DELAY_BETWEEN_TELEGRAM_DELIVERIES = config(     # in seconds
     default='1',
     cast=config.eval
 )
+NUM_TELEGRAM_RETRIES = config(
+    'NUM_TELEGRAM_RETRIES',
+    default='3',
+    cast=config.eval
+)

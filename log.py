@@ -6,7 +6,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s - %(name)-9s: [%(levelname)-8s] %(message)s'
+            'format': '%(asctime)s - %(name)-8s: [%(levelname)-8s] %(message)s'
         },
     },
     'handlers': {
