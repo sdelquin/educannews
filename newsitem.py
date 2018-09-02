@@ -9,6 +9,8 @@ import config
 
 logger = log.init_logger(__name__)
 
+THIRD_MODULES_EXCEPTION_MSG = 'Ups! Something went wrong'
+
 
 class NewsItem:
     def __init__(self, url, date, category, title, dbconn, dbcur):
@@ -75,10 +77,10 @@ class NewsItem:
                     disable_web_page_preview=False
                 )
             except telegram.error.BadRequest:
-                logger.exception('Ups! Something went wrong')
+                logger.exception(THIRD_MODULES_EXCEPTION_MSG)
             except telegram.error.TimedOut:
                 # message could be correctly delivered: https://goo.gl/TZ7kGR
-                logger.exception('Ups! Something went wrong')
+                logger.exception(THIRD_MODULES_EXCEPTION_MSG)
                 retry += 1
                 time.sleep(config.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
         return m
@@ -97,9 +99,9 @@ class NewsItem:
                     disable_web_page_preview=False
                 )
             except telegram.error.BadRequest:
-                logger.exception('Ups! Something went wrong')
+                logger.exception(THIRD_MODULES_EXCEPTION_MSG)
             except telegram.error.TimedOut:
-                logger.exception('Ups! Something went wrong')
+                logger.exception(THIRD_MODULES_EXCEPTION_MSG)
                 retry += 1
                 time.sleep(config.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
         return m

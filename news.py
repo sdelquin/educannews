@@ -73,7 +73,7 @@ class News:
             r = news_item.is_already_saved()
             if r:
                 if r['url'] == news_item.url:
-                    logger.info(f'Ignoring already checked: {news_item}')
+                    logger.info(f'Ignoring already saved: {news_item}')
                     continue
                 else:
                     # capture telegram message id to be edited with new url
