@@ -4,11 +4,13 @@ Usage:
     educannews.py createdb
     educannews.py notify
 '''
-from news import News
 from docopt import docopt
+
+from news import News
 from db import create_db, init_db
 
 arguments = docopt(__doc__)
+
 if arguments['createdb']:
     create_db()
 elif arguments['notify']:

@@ -7,32 +7,33 @@ import crayons
 import config
 
 
-def create_db():
-    db_path = config.DATABASE
+def create_db(db_path=config.DATABASE, force_delete=False):
     if os.path.isfile(db_path):
-        print(
-            crayons.red(
-                f'''Database {db_path} already exists.
-    If you continue it will be DESTROYED!! Continue? [y/N] ''',
-                bold=True
-            ),
-            end=''
-        )
-        option = input()
-        if option.upper() == 'Y':
+        if force_delete:
             os.remove(db_path)
-            print('{} {} {}'.format(
-                'Database',
-                crayons.white(db_path, bold=True),
-                crayons.green('successfully deleted!')
-            ))
         else:
-            sys.exit()
+            print(
+                crayons.red(
+                    f'''Database {db_path} already exists.
+        If you continue it will be DESTROYED!! Continue? [y/N] ''',
+                    bold=True
+                ),
+                end=''
+            )
+            option = input()
+            if option.upper() == 'Y':
+                os.remove(db_path)
+                print('{} {} {}'.format(
+                    'Database',
+                    crayons.white(db_path, bold=True),
+                    crayons.green('successfully deleted!')
+                ))
+            else:
+                sys.exit()
 
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
+    conn, cur = init_db(db_path)
     # table of news
-    c.execute(
+    cur.execute(
         '''
         CREATE TABLE news
         (title text,
@@ -66,8 +67,8 @@ def dict_factory(cursor, row):
     return d
 
 
-def init_db():
-    dbconn = sqlite3.connect(config.DATABASE)
+def init_db(db_path=config.DATABASE):
+    dbconn = sqlite3.connect(db_path)
     dbconn.row_factory = dict_factory
     dbcur = dbconn.cursor()
     return dbconn, dbcur
