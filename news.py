@@ -5,6 +5,7 @@ import os
 
 import requests
 from bs4 import BeautifulSoup
+import telegram
 
 import log
 import utils
@@ -24,6 +25,7 @@ class News:
 
         self.dbconn = dbconn
         self.dbcur = dbcur
+        self.bot = telegram.Bot(token=config.BOT_TOKEN)
 
     def _get_num_news_to_delete_when_rotating_db(self):
         return 1 if config.MAX_NEWS_TO_SAVE_ON_DB <= 2 * \
@@ -111,3 +113,12 @@ class News:
                     news_item.save_on_db(msg.message_id)
             # ensure dispatching in right order and avoid timeout issues
             time.sleep(config.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
+
+    def reset(self):
+        """ MAKE USE WITH ATTENTION. It will delete every news """
+        self.dbcur.execute('select * from news')
+        for newsitem in self.dbcur.fetchall():
+            self.bot.delete_message(config.CHANNEL_NAME, newsitem['tg_msg_id'])
+        self.dbcur.execute('delete from news')
+        self.dbconn.commit()
+        self.news = []
