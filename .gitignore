@@ -3,3 +3,4 @@
 .env
 *.log
 *.db*
+.pytest_cache
