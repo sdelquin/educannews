@@ -7,11 +7,9 @@ import crayons
 import config
 
 
-def create_db(db_path=config.DATABASE, force_delete=False):
+def create_db(db_path=config.DATABASE, force_delete=False, verbose=True):
     if os.path.isfile(db_path):
-        if force_delete:
-            os.remove(db_path)
-        else:
+        if not force_delete:
             print(
                 crayons.red(
                     f'''Database {db_path} already exists.
@@ -20,16 +18,22 @@ def create_db(db_path=config.DATABASE, force_delete=False):
                 ),
                 end=''
             )
+        if force_delete:
+            option = 'y'
+            if verbose:
+                print(crayons.cyan(f'{os.linesep}Force delete enabled'))
+        else:
             option = input()
-            if option.upper() == 'Y':
-                os.remove(db_path)
+        if option.upper() == 'Y':
+            os.remove(db_path)
+            if verbose:
                 print('{} {} {}'.format(
                     'Database',
                     crayons.white(db_path, bold=True),
                     crayons.green('successfully deleted!')
                 ))
-            else:
-                sys.exit()
+        else:
+            sys.exit()
 
     conn, cur = init_db(db_path)
     # table of news
@@ -45,19 +49,20 @@ def create_db(db_path=config.DATABASE, force_delete=False):
         '''
     )
     conn.commit()
-    conn.close()
 
-    print('{} {} {}'.format(
-        'Database',
-        crayons.white(db_path, bold=True),
-        crayons.green('successfully created!')
-    ))
+    if verbose:
+        print('{} {} {}'.format(
+            'Database',
+            crayons.white(db_path, bold=True),
+            crayons.green('successfully created!')
+        ))
+        print('{} {} {}'.format(
+            'Table',
+            crayons.white('news', bold=True),
+            crayons.green('successfully created!')
+        ))
 
-    print('{} {} {}'.format(
-        'Table',
-        crayons.white('news', bold=True),
-        crayons.green('successfully created!')
-    ))
+    return conn, cur
 
 
 def dict_factory(cursor, row):
