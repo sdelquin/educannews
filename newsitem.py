@@ -74,7 +74,8 @@ class NewsItem:
                     chat_id=config.CHANNEL_NAME,
                     text=self.as_markdown,
                     parse_mode=telegram.ParseMode.MARKDOWN,
-                    disable_web_page_preview=False
+                    disable_web_page_preview=False,
+                    timeout=config.TELEGRAM_READ_TIMEOUT
                 )
             except telegram.error.BadRequest:
                 logger.exception(THIRD_MODULES_EXCEPTION_MSG)
@@ -96,7 +97,8 @@ class NewsItem:
                     message_id=self.tg_msg_id,
                     text=self.as_markdown + ' #editado',
                     parse_mode=telegram.ParseMode.MARKDOWN,
-                    disable_web_page_preview=False
+                    disable_web_page_preview=False,
+                    timeout=config.TELEGRAM_READ_TIMEOUT
                 )
             except telegram.error.BadRequest:
                 logger.exception(THIRD_MODULES_EXCEPTION_MSG)

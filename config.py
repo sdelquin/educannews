@@ -34,3 +34,8 @@ NUM_TELEGRAM_RETRIES = config(
     default='3',
     cast=config.eval
 )
+TELEGRAM_READ_TIMEOUT = config(
+    'TELEGRAM_READ_TIMEOUT',
+    default=15,
+    cast=int
+)
