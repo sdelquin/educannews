@@ -6,6 +6,7 @@ import telegram
 
 import log
 import config
+import utils
 
 logger = log.init_logger(__name__)
 
@@ -27,13 +28,26 @@ class NewsItem:
     def __str__(self):
         return self.title
 
-    def is_already_saved(self):
+    def is_already_exactly_saved(self):
         # retrieve last seen news-item with the same title (ignore case)
         self.dbcur.execute(
             (f"select * from news where title='{self.title}' "
              "collate nocase order by rowid desc")
         )
         return self.dbcur.fetchone()
+
+    def is_already_similar_saved(self):
+        self.dbcur.execute('select * from news order by rowid desc')
+        best_ratio, best_news_item = 0, None
+        for news_item in self.dbcur.fetchall():
+            ratio = utils.similarity_ratio(news_item['title'], self.title)
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best_news_item = news_item
+        if best_ratio >= config.NEWS_SIMILARITY_THRESHOLD:
+            return best_news_item, best_ratio
+        else:
+            return None, 0
 
     def save_on_db(self, tg_msg_id):
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%f')
@@ -48,7 +62,7 @@ class NewsItem:
         )''')
         self.dbconn.commit()
 
-    def update_on_db(self, fields=['url']):
+    def update_on_db(self, fields=['title', 'url']):
         logger.info(f'Updating on DB: {self}')
         set_expr = ', '.join([f"{f} = '{getattr(self, f)}'" for f in fields])
         self.dbcur.execute(

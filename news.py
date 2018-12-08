@@ -70,14 +70,21 @@ class News:
         logger.info('Sifting news')
         self.news, news = [], self.news[:]
         for news_item in news:
-            r = news_item.is_already_saved()
-            if r:
-                if r['url'] == news_item.url:
+            ni = news_item.is_already_exactly_saved()
+            if ni:
+                if ni['url'] == news_item.url:
                     logger.info(f'Ignoring already saved: {news_item}')
                     continue
                 else:
                     # capture telegram message id to be edited with new url
-                    news_item.tg_msg_id = r['tg_msg_id']
+                    news_item.tg_msg_id = ni['tg_msg_id']
+            else:
+                # news_item and similarity ratio
+                ni, sr = news_item.is_already_similar_saved()
+                if ni:
+                    logger.info(
+                        f'Found similar news_item [{sr:.2f}]: {news_item}')
+                    news_item.tg_msg_id = ni['tg_msg_id']
             self.news.append(news_item)
 
     def max_news_on_db_reached(self):

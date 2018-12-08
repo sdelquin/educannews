@@ -39,3 +39,5 @@ TELEGRAM_READ_TIMEOUT = config(
     default=15,
     cast=int
 )
+NEWS_SIMILARITY_THRESHOLD = config(
+    'NEWS_SIMILARITY_THRESHOLD', default=0.85, cast=float)

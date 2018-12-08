@@ -10,6 +10,7 @@ prettyconf = "*"
 python-telegram-bot = "*"
 crayons = "*"
 docopt = "*"
+python-slugify = "*"
 
 [dev-packages]
 ipython = "*"
@@ -18,6 +19,7 @@ rope = "*"
 "fabric3" = "*"
 "autopep8" = "*"
 pytest = "*"
+yapf = "*"
 
 [requires]
 python_version = "3.6"
