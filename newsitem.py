@@ -29,11 +29,8 @@ class NewsItem:
         return self.title
 
     def is_already_exactly_saved(self):
-        # retrieve last seen news-item with the same title (ignore case)
-        self.dbcur.execute(
-            (f"select * from news where title='{self.title}' "
-             "collate nocase order by rowid desc")
-        )
+        # retrieve last seen news-item with the same title
+        self.dbcur.execute(f"select * from news where title='{self.title}'")
         return self.dbcur.fetchone()
 
     def is_already_similar_saved(
