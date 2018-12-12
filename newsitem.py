@@ -36,10 +36,11 @@ class NewsItem:
         )
         return self.dbcur.fetchone()
 
-    def is_already_similar_saved(self):
+    def is_already_similar_saved(
+            self, search_limit=config.ROUGH_NUM_NEWS_ON_FRONTPAGE):
         self.dbcur.execute('select * from news order by rowid desc')
         best_ratio, best_news_item = 0, None
-        for news_item in self.dbcur.fetchall():
+        for news_item in self.dbcur.fetchall()[:search_limit]:
             ratio = utils.similarity_ratio(news_item['title'], self.title)
             if ratio > best_ratio:
                 best_ratio = ratio
