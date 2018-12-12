@@ -34,12 +34,18 @@ def test_telegram_editing(educan_news):
     assert newsitem.url == educan_news.dbcur.fetchone()['url']
 
 
-def test_case_comparing(educan_news):
+def test_exact_news_found(educan_news):
+    educan_news.get_news(NUM_NEWS_TO_TEST)
+    educan_news.dispatch_news()
+    assert len(educan_news.news) == 0
+
+
+def test_similar_news_found(educan_news):
     newsitem = educan_news.news[0]
     educan_news.dbcur.execute(
-        f"update news set title='{newsitem.title.upper()}' where rowid=1"
+        f"update news set title=';-{newsitem.title.upper()}-' where rowid=1"
     )
     educan_news.dbconn.commit()
     educan_news.get_news(NUM_NEWS_TO_TEST)
     educan_news.dispatch_news()
-    assert len(educan_news.news) == 0
+    assert len(educan_news.news) == 1
