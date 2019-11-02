@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"beautifulsoup4" = "*"
+beautifulsoup4 = "*"
 requests = "*"
 prettyconf = "*"
 python-telegram-bot = "*"
@@ -13,13 +13,11 @@ docopt = "*"
 python-slugify = "*"
 
 [dev-packages]
-ipython = "*"
-"flake8" = "*"
+flake8 = "*"
 rope = "*"
-"fabric3" = "*"
-"autopep8" = "*"
-pytest = "*"
 yapf = "*"
+fabric3 = "*"
+pytest = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"
