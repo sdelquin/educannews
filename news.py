@@ -57,10 +57,11 @@ class News:
                 t.strip() for t in
                 re.search(r'\[(.*)\].*\[(.*)\]', spans[0].string).groups()
             )
-            title = spans[1].string.strip()
+            title = spans[1].text.strip()
             # remove dots at the right
             category = utils.rstripwithdots(category)
             title = utils.rstripwithdots(title)
+            title = utils.replace_important(title)
 
             self.news.append(NewsItem(url, date, category,
                                       title, self.dbconn, self.dbcur))
