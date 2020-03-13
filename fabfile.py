@@ -5,6 +5,6 @@ env.hosts = ['cloud']
 
 def deploy():
     local('git push')
-    with cd('~/educannews'):
+    with cd('~/code/educannews'):
         run('git pull')
         run('pipenv install')
