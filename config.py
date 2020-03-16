@@ -1,6 +1,9 @@
 from prettyconf import config
 
-NEWS_URL = 'http://www.gobiernodecanarias.org/educacion/web/'
+NEWS_URL = config(
+    'NEWS_URL',
+    default='https://www.gobiernodecanarias.org/educacion/web/'
+)
 
 DATABASE = config(
     'DATABASE',
