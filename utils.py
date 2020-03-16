@@ -2,6 +2,18 @@ import difflib
 import re
 from slugify import slugify
 
+PREPOSITIONS = [
+    'a', 'ante', 'bajo', 'cabe', 'con', 'contra', 'de', 'desde', 'durante',
+    'en', 'entre', 'hacia', 'hasta', 'mediante', 'para', 'por', 'segun', 'sin',
+    'so', 'sobre', 'tras', 'versus', 'via'
+]
+ARTICLES = ['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas']
+DETERMINERS = [
+    'este', 'esta', 'estos', 'estas', 'ese', 'esa', 'esos', 'esas', 'aquel',
+    'aquella', 'aquellos', 'aquellas'
+]
+WORDS_TO_IGNORE = PREPOSITIONS + ARTICLES + DETERMINERS
+
 
 def rstripwithdots(text):
     return re.sub(r'[\s.]+$', '', text)
@@ -12,9 +24,15 @@ def tokenize(text):
 
 
 def similarity_ratio(text1, text2):
-    words_in_text1 = list(tokenize(text1))
-    words_in_text2 = list(tokenize(text2))
-    sm = difflib.SequenceMatcher(None, words_in_text1, words_in_text2)
+    tokenized_text1 = list({
+        word
+        for word in tokenize(text1) if word not in WORDS_TO_IGNORE
+    })
+    tokenized_text2 = list({
+        word
+        for word in tokenize(text2) if word not in WORDS_TO_IGNORE
+    })
+    sm = difflib.SequenceMatcher(None, tokenized_text1, tokenized_text2)
     return sm.ratio()
 
 
