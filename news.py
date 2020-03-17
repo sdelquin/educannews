@@ -38,7 +38,40 @@ class News:
             buffer.append(f'{i + 1}) {news_item}')
         return os.linesep.join(buffer)
 
+    def __parse_single_news(self, news):
+        a = news.a
+        if a is None:  # news without link
+            url = config.NEWS_URL
+            spans = news.find_all('span')
+            title = news.contents[-1].strip()
+        else:
+            # ensure url is absolute
+            url = urljoin(config.NEWS_URL, a['href'].strip())
+            spans = a.find_all('span')
+            title = spans[1].text.strip()
+
+        date, category = (
+            t.strip() for t in
+            re.search(r'\[(.*)\].*\[(.*)\]', spans[0].string).groups()
+        )
+
+        # some cleaning
+        category = utils.rstripwithdots(category)
+        title = utils.rstripwithdots(title)
+        title = utils.replace_important(title)
+
+        return url, date, category, title
+
     def get_news(self, max_news_to_retrieve=None):
+        '''
+        Estructura de las noticias:
+        div.noticia
+            ⌊ h3.tit_noticia
+                ⌊ a  -> (href)
+                    ⌊ span  -> [fecha] y [categoría]
+                    ⌊ span  -> título
+        '''
+
         logger.info('Getting news from web')
         self.news = []
         result = requests.get(self.url)
@@ -46,23 +79,11 @@ class News:
         content = soup.find(
             'form', 'frm_bloque_novedades_categorizadas'
         ).parent
-        all_news = content.find_all('div', 'noticia')
+        all_news = content.find_all('h3', 'tit_noticia')
+
         logger.info('Parsing downloaded news')
         for news in list(reversed(all_news))[:max_news_to_retrieve]:
-            a = news.h3.a
-            spans = a.find_all('span')
-            # ensure url is absolute
-            url = urljoin(config.NEWS_URL, a['href'].strip())
-            date, category = (
-                t.strip() for t in
-                re.search(r'\[(.*)\].*\[(.*)\]', spans[0].string).groups()
-            )
-            title = spans[1].text.strip()
-            # remove dots at the right
-            category = utils.rstripwithdots(category)
-            title = utils.rstripwithdots(title)
-            title = utils.replace_important(title)
-
+            url, date, category, title = self.__parse_single_news(news)
             self.news.append(NewsItem(url, date, category,
                                       title, self.dbconn, self.dbcur))
         self._sift_news()
