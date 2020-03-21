@@ -43,7 +43,7 @@ class News:
         news_summary = news.find('div', 'txt_noticia')
         a = news_header.a
         if a is None:  # news without link
-            url = None
+            url = ''
             spans = news_header.find_all('span')
             title = news_header.contents[-1]
         else:
@@ -63,7 +63,7 @@ class News:
         title = utils.rstripwithdots(title)
         title = utils.replace_important(title)
         # if the news does not have a link we add the summary to the title
-        if url is None:
+        if not url:
             title = f'{title}: \n {summary}'
 
         return url, date, category, title, summary

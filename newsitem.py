@@ -73,9 +73,12 @@ class NewsItem:
         return '#' + re.sub(r'\s*,\s*|\s+', '', self.category.title())
 
     @property
+    def is_announcement(self):
+        return self.url == ''
+
+    @property
     def as_markdown(self):
-        md = ''
-        if self.url is None:
+        if self.is_announcement:
             md = f'{self.title}. {self.category_as_hash}'
         else:
             md = f'[{self.title}.]({self.url}) {self.category_as_hash}'
