@@ -4,7 +4,6 @@ NEWS_URL = config(
     'NEWS_URL',
     default='https://www.gobiernodecanarias.org/educacion/web/'
 )
-
 DATABASE = config(
     'DATABASE',
     default='news.db'
@@ -44,3 +43,4 @@ TELEGRAM_READ_TIMEOUT = config(
 )
 NEWS_SIMILARITY_THRESHOLD = config(
     'NEWS_SIMILARITY_THRESHOLD', default=0.85, cast=float)
+EMOJI_FOR_IMPORTANT_NEWS = config('EMOJI_FOR_IMPORTANT_NEWS', default='📣')

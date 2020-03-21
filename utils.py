@@ -1,6 +1,9 @@
 import difflib
 import re
+
 from slugify import slugify
+
+import config
 
 PREPOSITIONS = [
     'a', 'ante', 'bajo', 'cabe', 'con', 'contra', 'de', 'desde', 'durante',
@@ -37,4 +40,5 @@ def similarity_ratio(text1, text2):
 
 
 def replace_important(text):
-    return re.sub(r'\[\s*IMPORTANTE\s*\]', '🛑', text)
+    return re.sub(r'\[\s*IMPORTANTE\s*\]', config.EMOJI_FOR_IMPORTANT_NEWS,
+                  text)
