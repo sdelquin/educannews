@@ -74,7 +74,12 @@ class NewsItem:
 
     @property
     def as_markdown(self):
-        return f'[{self.title}.]({self.url}) {self.category_as_hash}'
+        md = ''
+        if self.url is None:
+            md = f'{self.title}. {self.category_as_hash}'
+        else:
+            md = f'[{self.title}.]({self.url}) {self.category_as_hash}'
+        return md
 
     def send_msg(self):
         m, retry = None, 0

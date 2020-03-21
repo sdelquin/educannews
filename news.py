@@ -39,16 +39,18 @@ class News:
         return os.linesep.join(buffer)
 
     def __parse_single_news(self, news):
-        a = news.a
+        news_header = news.h3
+        news_summary = news.find('div', 'txt_noticia')
+        a = news_header.a
         if a is None:  # news without link
-            url = config.NEWS_URL
-            spans = news.find_all('span')
-            title = news.contents[-1].strip()
+            url = None
+            spans = news_header.find_all('span')
+            title = news_header.contents[-1]
         else:
             # ensure url is absolute
             url = urljoin(config.NEWS_URL, a['href'].strip())
             spans = a.find_all('span')
-            title = spans[1].text.strip()
+            title = spans[1].text
 
         date, category = (
             t.strip() for t in
@@ -57,10 +59,14 @@ class News:
 
         # some cleaning
         category = utils.rstripwithdots(category)
+        summary = utils.rstripwithdots(news_summary.text)
         title = utils.rstripwithdots(title)
         title = utils.replace_important(title)
+        # if the news does not have a link we add the summary to the title
+        if url is None:
+            title = f'{title}: \n {summary}'
 
-        return url, date, category, title
+        return url, date, category, title, summary
 
     def get_news(self, max_news_to_retrieve=None):
         '''
@@ -70,6 +76,9 @@ class News:
                 ⌊ a  -> (href)
                     ⌊ span  -> [fecha] y [categoría]
                     ⌊ span  -> título
+            ⌊ div.txt_noticia
+                ⌊ p
+                ⌊ p
         '''
 
         logger.info('Getting news from web')
@@ -79,11 +88,11 @@ class News:
         content = soup.find(
             'form', 'frm_bloque_novedades_categorizadas'
         ).parent
-        all_news = content.find_all('h3', 'tit_noticia')
+        all_news = content.find_all('div', 'noticia')
 
         logger.info('Parsing downloaded news')
         for news in list(reversed(all_news))[:max_news_to_retrieve]:
-            url, date, category, title = self.__parse_single_news(news)
+            url, date, category, title, _ = self.__parse_single_news(news)
             self.news.append(NewsItem(url, date, category,
                                       title, self.dbconn, self.dbcur))
         self._sift_news()
