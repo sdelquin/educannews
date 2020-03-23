@@ -86,7 +86,7 @@ class NewsItem:
 
     def send_msg(self):
         m, retry = None, 0
-        while (not m) and (retry <= config.NUM_TELEGRAM_RETRIES):
+        while (not m) and (retry < config.NUM_TELEGRAM_RETRIES):
             retry_msg = f' (retry {retry})' if retry else ''
             logger.info(f'Sending telegram message{retry_msg}: {self}')
             try:
@@ -108,7 +108,7 @@ class NewsItem:
 
     def edit_msg(self):
         m, retry = None, 0
-        while (not m) and (retry <= config.NUM_TELEGRAM_RETRIES):
+        while (not m) and (retry < config.NUM_TELEGRAM_RETRIES):
             retry_msg = f' (retry {retry})' if retry else ''
             logger.info(f'Editing telegram message{retry_msg}: {self}')
             try:
