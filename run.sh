@@ -1,4 +1,5 @@
 #!/bin/bash
 
+source ~/.virtualenvs/educannews/bin/activate
 cd "$(dirname "$0")"
-exec pipenv run python educannews.py notify
+exec python educannews.py notify
