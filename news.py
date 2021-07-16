@@ -62,6 +62,7 @@ class News:
         summary = utils.rstripwithdots(news_summary.text)
         title = utils.rstripwithdots(title)
         title = utils.replace_important(title)
+        title = utils.remove_square_brackets(title)
         # if the news does not have a link we add the summary to the title
         if not url:
             title = f'{title}: \n {summary}'

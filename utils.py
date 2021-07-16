@@ -42,3 +42,6 @@ def similarity_ratio(text1, text2):
 def replace_important(text):
     return re.sub(r'\[\s*IMPORTANTE\s*\]', config.EMOJI_FOR_IMPORTANT_NEWS,
                   text)
+
+def remove_square_brackets(text):
+    return re.sub(r'\[\s*([^\[\]]+)\s*\]', r'\1', text)
