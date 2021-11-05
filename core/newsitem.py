@@ -1,12 +1,11 @@
-import re
 import datetime
+import re
 import time
 
 import telegram
 
-import log
 import config
-import utils
+from core import log, utils
 
 logger = log.init_logger(__name__)
 
@@ -33,8 +32,7 @@ class NewsItem:
         self.dbcur.execute(f"select * from news where title='{self.title}'")
         return self.dbcur.fetchone()
 
-    def is_already_similar_saved(
-            self, search_limit=config.ROUGH_NUM_NEWS_ON_FRONTPAGE):
+    def is_already_similar_saved(self, search_limit=config.ROUGH_NUM_NEWS_ON_FRONTPAGE):
         self.dbcur.execute('select * from news order by rowid desc')
         best_ratio, best_news_item = 0, None
         for news_item in self.dbcur.fetchall()[:search_limit]:
@@ -50,22 +48,22 @@ class NewsItem:
     def save_on_db(self, tg_msg_id):
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%f')
         logger.info(f'Saving on DB: {self}')
-        self.dbcur.execute(f'''insert into news values (
+        self.dbcur.execute(
+            f'''insert into news values (
             '{self.title}',
             '{self.date}',
             '{self.url}',
             '{self.category}',
             '{now}',
             {tg_msg_id}
-        )''')
+        )'''
+        )
         self.dbconn.commit()
 
     def update_on_db(self, fields=['title', 'url']):
         logger.info(f'Updating on DB: {self}')
         set_expr = ', '.join([f"{f} = '{getattr(self, f)}'" for f in fields])
-        self.dbcur.execute(
-            f"update news set {set_expr} where tg_msg_id = {self.tg_msg_id}"
-        )
+        self.dbcur.execute(f"update news set {set_expr} where tg_msg_id = {self.tg_msg_id}")
         self.dbconn.commit()
 
     @property
@@ -95,7 +93,7 @@ class NewsItem:
                     text=self.as_markdown,
                     parse_mode=telegram.ParseMode.MARKDOWN,
                     disable_web_page_preview=False,
-                    timeout=config.TELEGRAM_READ_TIMEOUT
+                    timeout=config.TELEGRAM_READ_TIMEOUT,
                 )
             except telegram.error.BadRequest:
                 logger.exception(THIRD_MODULES_EXCEPTION_MSG)
@@ -118,7 +116,7 @@ class NewsItem:
                     text=self.as_markdown + ' #editado',
                     parse_mode=telegram.ParseMode.MARKDOWN,
                     disable_web_page_preview=False,
-                    timeout=config.TELEGRAM_READ_TIMEOUT
+                    timeout=config.TELEGRAM_READ_TIMEOUT,
                 )
             except telegram.error.BadRequest:
                 logger.exception(THIRD_MODULES_EXCEPTION_MSG)

@@ -2,8 +2,8 @@ import os
 
 import pytest
 
-from news import News
-from db import create_db
+from core.db import create_db
+from core.news import News
 
 TEST_DB_PATH = 'news.test.db'
 NUM_NEWS_TO_TEST = 3
