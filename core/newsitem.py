@@ -4,7 +4,7 @@ import time
 
 import telegram
 
-import config
+import settings
 from core import log, utils
 
 logger = log.init_logger(__name__)
@@ -23,7 +23,7 @@ class NewsItem:
 
         self.dbconn = dbconn
         self.dbcur = dbcur
-        self.bot = telegram.Bot(token=config.BOT_TOKEN)
+        self.bot = telegram.Bot(token=settings.BOT_TOKEN)
 
     def __str__(self):
         return self.title
@@ -37,7 +37,7 @@ class NewsItem:
         self.dbcur.execute(f"select * from news where title='{self.title}'")
         return self.dbcur.fetchone()
 
-    def is_already_similar_saved(self, search_limit=config.ROUGH_NUM_NEWS_ON_FRONTPAGE):
+    def is_already_similar_saved(self, search_limit=settings.ROUGH_NUM_NEWS_ON_FRONTPAGE):
         self.dbcur.execute('select * from news order by rowid desc')
         best_ratio, best_news_item = 0, None
         for news_item in self.dbcur.fetchall()[:search_limit]:
@@ -45,7 +45,7 @@ class NewsItem:
             if ratio > best_ratio:
                 best_ratio = ratio
                 best_news_item = news_item
-        if best_ratio >= config.NEWS_SIMILARITY_THRESHOLD:
+        if best_ratio >= settings.NEWS_SIMILARITY_THRESHOLD:
             return best_news_item, best_ratio
         else:
             return None, 0
@@ -81,16 +81,16 @@ class NewsItem:
 
     def send_msg(self):
         m, retry = None, 0
-        while (not m) and (retry <= config.NUM_TELEGRAM_RETRIES):
+        while (not m) and (retry <= settings.NUM_TELEGRAM_RETRIES):
             retry_msg = f' (retry {retry})' if retry else ''
             logger.info(f'Sending telegram message{retry_msg}: {self}')
             try:
                 m = self.bot.send_message(
-                    chat_id=config.CHANNEL_NAME,
+                    chat_id=settings.CHANNEL_NAME,
                     text=self.as_markdown,
                     parse_mode=telegram.ParseMode.MARKDOWN,
                     disable_web_page_preview=False,
-                    timeout=config.TELEGRAM_READ_TIMEOUT,
+                    timeout=settings.TELEGRAM_READ_TIMEOUT,
                 )
             except telegram.error.BadRequest:
                 logger.exception(THIRD_MODULES_EXCEPTION_MSG)
@@ -98,27 +98,27 @@ class NewsItem:
                 # message could be correctly delivered: https://goo.gl/TZ7kGR
                 logger.exception(THIRD_MODULES_EXCEPTION_MSG)
                 retry += 1
-                time.sleep(config.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
+                time.sleep(settings.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
         return m
 
     def edit_msg(self):
         m, retry = None, 0
-        while (not m) and (retry <= config.NUM_TELEGRAM_RETRIES):
+        while (not m) and (retry <= settings.NUM_TELEGRAM_RETRIES):
             retry_msg = f' (retry {retry})' if retry else ''
             logger.info(f'Editing telegram message{retry_msg}: {self}')
             try:
                 m = self.bot.edit_message_text(
-                    chat_id=config.CHANNEL_NAME,
+                    chat_id=settings.CHANNEL_NAME,
                     message_id=self.tg_msg_id,
                     text=self.as_markdown + ' #editado',
                     parse_mode=telegram.ParseMode.MARKDOWN,
                     disable_web_page_preview=False,
-                    timeout=config.TELEGRAM_READ_TIMEOUT,
+                    timeout=settings.TELEGRAM_READ_TIMEOUT,
                 )
             except telegram.error.BadRequest:
                 logger.exception(THIRD_MODULES_EXCEPTION_MSG)
             except telegram.error.TimedOut:
                 logger.exception(THIRD_MODULES_EXCEPTION_MSG)
                 retry += 1
-                time.sleep(config.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
+                time.sleep(settings.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
         return m

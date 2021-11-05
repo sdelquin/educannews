@@ -1,7 +1,7 @@
 import logging
 import logging.config
 
-import config
+import settings
 
 LOGGING = {
     'version': 1,
@@ -14,7 +14,7 @@ LOGGING = {
             'level': 'INFO',
             'formatter': 'verbose',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': config.PROJECT_DIR / 'educannews.log',
+            'filename': settings.PROJECT_DIR / 'educannews.log',
             'maxBytes': 1 * 1024 * 1024,
             'backupCount': 1,
         },

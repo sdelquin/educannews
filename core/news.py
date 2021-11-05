@@ -6,7 +6,7 @@ import requests
 import telegram
 from bs4 import BeautifulSoup
 
-import config
+import settings
 from core import log, utils
 from core.newsitem import NewsItem
 
@@ -16,20 +16,20 @@ logger = log.init_logger(__name__)
 class News:
     def __init__(self, dbconn, dbcur):
         logger.info('Building News object')
-        self.url = config.NEWS_URL
+        self.url = settings.NEWS_URL
         self.num_news_to_delete_when_rotating_db = (
             self._get_num_news_to_delete_when_rotating_db()
         )
 
         self.dbconn = dbconn
         self.dbcur = dbcur
-        self.bot = telegram.Bot(token=config.BOT_TOKEN)
+        self.bot = telegram.Bot(token=settings.BOT_TOKEN)
 
     def _get_num_news_to_delete_when_rotating_db(self):
         return (
             1
-            if config.MAX_NEWS_TO_SAVE_ON_DB <= 2 * config.ROUGH_NUM_NEWS_ON_FRONTPAGE
-            else config.MAX_NEWS_TO_SAVE_ON_DB // 2
+            if settings.MAX_NEWS_TO_SAVE_ON_DB <= 2 * settings.ROUGH_NUM_NEWS_ON_FRONTPAGE
+            else settings.MAX_NEWS_TO_SAVE_ON_DB // 2
         )
 
     def __str__(self):
@@ -44,7 +44,7 @@ class News:
         link = news_header.a
 
         # ensure url is absolute
-        url = urljoin(config.NEWS_URL, link['href'].strip())
+        url = urljoin(settings.NEWS_URL, link['href'].strip())
         title = utils.clean_text(link.contents[4])
         date = utils.clean_text(link.find('span', 'fecha').string)
         category = utils.clean_text(link.find('span', 'categorias').string)
@@ -101,7 +101,7 @@ class News:
             self.news.append(news_item)
 
     def max_news_on_db_reached(self):
-        return self.num_news_on_db == config.MAX_NEWS_TO_SAVE_ON_DB
+        return self.num_news_on_db == settings.MAX_NEWS_TO_SAVE_ON_DB
 
     @property
     def num_news_on_db(self):
@@ -134,13 +134,13 @@ class News:
                     self.check_db_overflow()
                     news_item.save_on_db(msg.message_id)
             # ensure dispatching in right order and avoid timeout issues
-            time.sleep(config.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
+            time.sleep(settings.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
 
     def reset(self):
         """MAKE USE WITH ATTENTION. It will delete every news"""
         self.dbcur.execute('select * from news')
         for newsitem in self.dbcur.fetchall():
-            self.bot.delete_message(config.CHANNEL_NAME, newsitem['tg_msg_id'])
+            self.bot.delete_message(settings.CHANNEL_NAME, newsitem['tg_msg_id'])
         self.dbcur.execute('delete from news')
         self.dbconn.commit()
         self.news = []

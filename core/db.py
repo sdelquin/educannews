@@ -1,22 +1,22 @@
-import sqlite3
 import os
+import sqlite3
 import sys
 
 import crayons
 
-import config
+import settings
 
 
-def create_db(db_path=config.DATABASE, force_delete=False, verbose=True):
+def create_db(db_path=settings.DATABASE, force_delete=False, verbose=True):
     if os.path.isfile(db_path):
         if not force_delete:
             print(
                 crayons.red(
                     f'''Database {db_path} already exists.
         If you continue it will be DESTROYED!! Continue? [y/N] ''',
-                    bold=True
+                    bold=True,
                 ),
-                end=''
+                end='',
             )
         if force_delete:
             option = 'y'
@@ -27,11 +27,13 @@ def create_db(db_path=config.DATABASE, force_delete=False, verbose=True):
         if option.upper() == 'Y':
             os.remove(db_path)
             if verbose:
-                print('{} {} {}'.format(
-                    'Database',
-                    crayons.white(db_path, bold=True),
-                    crayons.green('successfully deleted!')
-                ))
+                print(
+                    '{} {} {}'.format(
+                        'Database',
+                        crayons.white(db_path, bold=True),
+                        crayons.green('successfully deleted!'),
+                    )
+                )
         else:
             sys.exit()
 
@@ -51,16 +53,20 @@ def create_db(db_path=config.DATABASE, force_delete=False, verbose=True):
     conn.commit()
 
     if verbose:
-        print('{} {} {}'.format(
-            'Database',
-            crayons.white(db_path, bold=True),
-            crayons.green('successfully created!')
-        ))
-        print('{} {} {}'.format(
-            'Table',
-            crayons.white('news', bold=True),
-            crayons.green('successfully created!')
-        ))
+        print(
+            '{} {} {}'.format(
+                'Database',
+                crayons.white(db_path, bold=True),
+                crayons.green('successfully created!'),
+            )
+        )
+        print(
+            '{} {} {}'.format(
+                'Table',
+                crayons.white('news', bold=True),
+                crayons.green('successfully created!'),
+            )
+        )
 
     return conn, cur
 
@@ -72,7 +78,7 @@ def dict_factory(cursor, row):
     return d
 
 
-def init_db(db_path=config.DATABASE):
+def init_db(db_path=settings.DATABASE):
     dbconn = sqlite3.connect(db_path)
     dbconn.row_factory = dict_factory
     dbcur = dbconn.cursor()
