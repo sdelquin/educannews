@@ -1,17 +1,14 @@
-import re
-from urllib.parse import urljoin
-import time
 import os
+import time
+from urllib.parse import urljoin
 
 import requests
-from bs4 import BeautifulSoup
 import telegram
+from bs4 import BeautifulSoup
 
-import log
-import utils
 import config
-from newsitem import NewsItem
-
+from core import log, utils
+from core.newsitem import NewsItem
 
 logger = log.init_logger(__name__)
 
@@ -20,17 +17,20 @@ class News:
     def __init__(self, dbconn, dbcur):
         logger.info('Building News object')
         self.url = config.NEWS_URL
-        self.num_news_to_delete_when_rotating_db = \
+        self.num_news_to_delete_when_rotating_db = (
             self._get_num_news_to_delete_when_rotating_db()
+        )
 
         self.dbconn = dbconn
         self.dbcur = dbcur
         self.bot = telegram.Bot(token=config.BOT_TOKEN)
 
     def _get_num_news_to_delete_when_rotating_db(self):
-        return 1 if config.MAX_NEWS_TO_SAVE_ON_DB <= 2 * \
-            config.ROUGH_NUM_NEWS_ON_FRONTPAGE else \
-            config.MAX_NEWS_TO_SAVE_ON_DB // 2
+        return (
+            1
+            if config.MAX_NEWS_TO_SAVE_ON_DB <= 2 * config.ROUGH_NUM_NEWS_ON_FRONTPAGE
+            else config.MAX_NEWS_TO_SAVE_ON_DB // 2
+        )
 
     def __str__(self):
         buffer = []
@@ -41,31 +41,14 @@ class News:
     def __parse_single_news(self, news):
         news_header = news.h3
         news_summary = news.find('div', 'txt_noticia')
-        a = news_header.a
-        if a is None:  # news without link
-            url = ''
-            spans = news_header.find_all('span')
-            title = news_header.contents[-1]
-        else:
-            # ensure url is absolute
-            url = urljoin(config.NEWS_URL, a['href'].strip())
-            spans = a.find_all('span')
-            title = spans[1].text
+        link = news_header.a
 
-        date, category = (
-            t.strip() for t in
-            re.search(r'\[(.*)\].*\[(.*)\]', spans[0].string).groups()
-        )
-
-        # some cleaning
-        category = utils.rstripwithdots(category)
-        summary = utils.rstripwithdots(news_summary.text)
-        title = utils.rstripwithdots(title)
-        title = utils.replace_important(title)
-        title = utils.remove_square_brackets(title)
-        # if the news does not have a link we add the summary to the title
-        if not url:
-            title = f'{title}: \n {summary}'
+        # ensure url is absolute
+        url = urljoin(config.NEWS_URL, link['href'].strip())
+        title = utils.clean_text(link.contents[4])
+        date = utils.clean_text(link.find('span', 'fecha').string)
+        category = utils.clean_text(link.find('span', 'categorias').string)
+        summary = utils.clean_text(news_summary.text)
 
         return url, date, category, title, summary
 
@@ -73,10 +56,10 @@ class News:
         '''
         Estructura de las noticias:
         div.noticia
-            ⌊ h3.tit_noticia
+            ⌊ h3.titulo_novedad
                 ⌊ a  -> (href)
-                    ⌊ span  -> [fecha] y [categoría]
-                    ⌊ span  -> título
+                    ⌊ span.fecha
+                    ⌊ span.categorias
             ⌊ div.txt_noticia
                 ⌊ p
                 ⌊ p
@@ -86,16 +69,15 @@ class News:
         self.news = []
         result = requests.get(self.url)
         soup = BeautifulSoup(result.content, features='html.parser')
-        content = soup.find(
-            'form', 'frm_bloque_novedades_categorizadas'
-        ).parent
-        all_news = content.find_all('div', 'noticia')
+        all_news = soup.find_all('div', 'noticia')
 
         logger.info('Parsing downloaded news')
         for news in list(reversed(all_news))[:max_news_to_retrieve]:
-            url, date, category, title, _ = self.__parse_single_news(news)
-            self.news.append(NewsItem(url, date, category,
-                                      title, self.dbconn, self.dbcur))
+            url, date, category, title, summary = self.__parse_single_news(news)
+            self.news.append(
+                NewsItem(url, date, category, title, summary, self.dbconn, self.dbcur)
+            )
+
         self._sift_news()
 
     def _sift_news(self):
@@ -114,8 +96,7 @@ class News:
                 # news_item and similarity ratio
                 ni, sr = news_item.is_already_similar_saved()
                 if ni:
-                    logger.info(
-                        f'Found similar news_item [{sr:.2f}]: {news_item}')
+                    logger.info(f'Found similar news_item [{sr:.2f}]: {news_item}')
                     news_item.tg_msg_id = ni['tg_msg_id']
             self.news.append(news_item)
 
@@ -128,11 +109,13 @@ class News:
         return self.dbcur.fetchone()['size']
 
     def rotate_db(self):
-        self.dbcur.execute(f'''
+        self.dbcur.execute(
+            f'''
             delete from news where rowid in
             (select rowid from news order by rowid limit
             {self.num_news_to_delete_when_rotating_db})
-        ''')
+        '''
+        )
         self.dbconn.commit()
 
     def check_db_overflow(self):
@@ -154,7 +137,7 @@ class News:
             time.sleep(config.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
 
     def reset(self):
-        """ MAKE USE WITH ATTENTION. It will delete every news """
+        """MAKE USE WITH ATTENTION. It will delete every news"""
         self.dbcur.execute('select * from news')
         for newsitem in self.dbcur.fetchall():
             self.bot.delete_message(config.CHANNEL_NAME, newsitem['tg_msg_id'])

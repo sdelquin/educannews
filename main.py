@@ -1,13 +1,13 @@
 '''EduCanNews
 
 Usage:
-    educannews.py createdb
-    educannews.py notify
+    main.py createdb
+    main.py notify
 '''
 from docopt import docopt
 
-from news import News
-from db import create_db, init_db
+from core.db import create_db, init_db
+from core.news import News
 
 arguments = docopt(__doc__)
 
