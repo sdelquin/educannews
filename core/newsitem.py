@@ -13,11 +13,12 @@ THIRD_MODULES_EXCEPTION_MSG = 'Ups! Something went wrong'
 
 
 class NewsItem:
-    def __init__(self, url, date, category, title, dbconn, dbcur):
+    def __init__(self, url, date, category, title, summary, dbconn, dbcur):
         self.url = url
         self.date = date
         self.category = category
         self.title = title
+        self.summary = summary
         self.tg_msg_id = None
 
         self.dbconn = dbconn
@@ -26,6 +27,10 @@ class NewsItem:
 
     def __str__(self):
         return self.title
+
+    def __repr__(self):
+        buf = [self.title, self.url, self.date, self.category]
+        return '\n'.join(buf)
 
     def is_already_exactly_saved(self):
         # retrieve last seen news-item with the same title
@@ -71,16 +76,8 @@ class NewsItem:
         return '#' + re.sub(r'\s*,\s*|\s+', '', self.category.title())
 
     @property
-    def is_announcement(self):
-        return self.url == ''
-
-    @property
     def as_markdown(self):
-        if self.is_announcement:
-            md = f'{self.title}. {self.category_as_hash}'
-        else:
-            md = f'[{self.title}.]({self.url}) {self.category_as_hash}'
-        return md
+        return f'[{self.title}]({self.url})\n_{self.summary}_\n{self.category_as_hash}'
 
     def send_msg(self):
         m, retry = None, 0

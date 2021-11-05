@@ -1,15 +1,13 @@
 import os
-import re
 import time
 from urllib.parse import urljoin
 
-import log
 import requests
 import telegram
 from bs4 import BeautifulSoup
 
 import config
-from core import utils
+from core import log, utils
 from core.newsitem import NewsItem
 
 logger = log.init_logger(__name__)
@@ -43,30 +41,14 @@ class News:
     def __parse_single_news(self, news):
         news_header = news.h3
         news_summary = news.find('div', 'txt_noticia')
-        a = news_header.a
-        if a is None:  # news without link
-            url = ''
-            spans = news_header.find_all('span')
-            title = news_header.contents[-1]
-        else:
-            # ensure url is absolute
-            url = urljoin(config.NEWS_URL, a['href'].strip())
-            spans = a.find_all('span')
-            title = spans[1].text
+        link = news_header.a
 
-        date, category = (
-            t.strip() for t in re.search(r'\[(.*)\].*\[(.*)\]', spans[0].string).groups()
-        )
-
-        # some cleaning
-        category = utils.rstripwithdots(category)
-        summary = utils.rstripwithdots(news_summary.text)
-        title = utils.rstripwithdots(title)
-        title = utils.replace_important(title)
-        title = utils.remove_square_brackets(title)
-        # if the news does not have a link we add the summary to the title
-        if not url:
-            title = f'{title}: \n {summary}'
+        # ensure url is absolute
+        url = urljoin(config.NEWS_URL, link['href'].strip())
+        title = utils.clean_text(link.contents[4])
+        date = utils.clean_text(link.find('span', 'fecha').string)
+        category = utils.clean_text(link.find('span', 'categorias').string)
+        summary = utils.clean_text(news_summary.text)
 
         return url, date, category, title, summary
 
@@ -74,10 +56,10 @@ class News:
         '''
         Estructura de las noticias:
         div.noticia
-            ⌊ h3.tit_noticia
+            ⌊ h3.titulo_novedad
                 ⌊ a  -> (href)
-                    ⌊ span  -> [fecha] y [categoría]
-                    ⌊ span  -> título
+                    ⌊ span.fecha
+                    ⌊ span.categorias
             ⌊ div.txt_noticia
                 ⌊ p
                 ⌊ p
@@ -87,13 +69,15 @@ class News:
         self.news = []
         result = requests.get(self.url)
         soup = BeautifulSoup(result.content, features='html.parser')
-        content = soup.find('form', 'frm_bloque_novedades_categorizadas').parent
-        all_news = content.find_all('div', 'noticia')
+        all_news = soup.find_all('div', 'noticia')
 
         logger.info('Parsing downloaded news')
         for news in list(reversed(all_news))[:max_news_to_retrieve]:
-            url, date, category, title, _ = self.__parse_single_news(news)
-            self.news.append(NewsItem(url, date, category, title, self.dbconn, self.dbcur))
+            url, date, category, title, summary = self.__parse_single_news(news)
+            self.news.append(
+                NewsItem(url, date, category, title, summary, self.dbconn, self.dbcur)
+            )
+
         self._sift_news()
 
     def _sift_news(self):
