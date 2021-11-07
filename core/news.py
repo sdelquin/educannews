@@ -78,9 +78,7 @@ class News:
                 NewsItem(url, date, category, title, summary, self.dbconn, self.dbcur)
             )
 
-        self._sift_news()
-
-    def _sift_news(self):
+    def sift_news(self):
         logger.info('Sifting news')
         self.news, news = [], self.news[:]
         for news_item in news:

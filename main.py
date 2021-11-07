@@ -16,4 +16,5 @@ if arguments['createdb']:
 elif arguments['notify']:
     educan_news = News(*init_db())
     educan_news.get_news()
+    educan_news.sift_news()
     educan_news.dispatch_news()
