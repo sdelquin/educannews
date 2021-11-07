@@ -14,6 +14,7 @@ def educan_news():
     dbconn, dbcur = create_db(TEST_DB_PATH, force_delete=True, verbose=False)
     educan_news = News(dbconn, dbcur)
     educan_news.get_news(NUM_NEWS_TO_TEST)
+    educan_news.sift_news()
     educan_news.dispatch_news()
     yield educan_news
     educan_news.reset()
@@ -25,27 +26,51 @@ def test_telegram_sending(educan_news):
 
 
 def test_telegram_editing(educan_news):
-    newsitem = educan_news.news[0]
-    educan_news.dbcur.execute("update news set url='' where rowid=1")
-    educan_news.dbconn.commit()
-    educan_news.get_news(NUM_NEWS_TO_TEST)
-    educan_news.dispatch_news()
     educan_news.dbcur.execute("select * from news where rowid=1")
-    assert newsitem.url == educan_news.dbcur.fetchone()['url']
+    existing_newsitem = educan_news.dbcur.fetchone()
+
+    educan_news.get_news(NUM_NEWS_TO_TEST)
+    new_url = 'https://example.com'
+    educan_news.news[0].url = new_url
+    educan_news.sift_news()
+    educan_news.dispatch_news()
+
+    educan_news.dbcur.execute("select * from news where rowid=1")
+    incoming_newsitem = educan_news.dbcur.fetchone()
+
+    assert len(educan_news.news) == 1
+    assert incoming_newsitem['tg_msg_id'] == existing_newsitem['tg_msg_id']
+    assert incoming_newsitem['title'] == existing_newsitem['title']
+    assert incoming_newsitem['summary'] == existing_newsitem['summary']
+    assert incoming_newsitem['category'] == existing_newsitem['category']
+    assert incoming_newsitem['date'] == existing_newsitem['date']
+    assert incoming_newsitem['url'] == new_url
 
 
 def test_exact_news_found(educan_news):
     educan_news.get_news(NUM_NEWS_TO_TEST)
     educan_news.dispatch_news()
+    educan_news.sift_news()
     assert len(educan_news.news) == 0
 
 
 def test_similar_news_found(educan_news):
-    newsitem = educan_news.news[0]
-    educan_news.dbcur.execute(
-        f"update news set title=';-{newsitem.title.upper()}-' where rowid=1"
-    )
-    educan_news.dbconn.commit()
+    educan_news.dbcur.execute("select * from news where rowid=1")
+    existing_newsitem = educan_news.dbcur.fetchone()
+
     educan_news.get_news(NUM_NEWS_TO_TEST)
+    new_title = f";-{existing_newsitem['title'].upper()}-"
+    educan_news.news[0].title = new_title
+    educan_news.sift_news()
     educan_news.dispatch_news()
+
+    educan_news.dbcur.execute("select * from news where rowid=1")
+    incoming_newsitem = educan_news.dbcur.fetchone()
+
     assert len(educan_news.news) == 1
+    assert incoming_newsitem['tg_msg_id'] == existing_newsitem['tg_msg_id']
+    assert incoming_newsitem['url'] == existing_newsitem['url']
+    assert incoming_newsitem['summary'] == existing_newsitem['summary']
+    assert incoming_newsitem['category'] == existing_newsitem['category']
+    assert incoming_newsitem['date'] == existing_newsitem['date']
+    assert incoming_newsitem['title'] == new_title

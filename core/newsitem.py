@@ -32,12 +32,14 @@ class NewsItem:
         buf = [self.title, self.url, self.date, self.category]
         return '\n'.join(buf)
 
-    def is_already_exactly_saved(self):
+    def is_saved_with_same_title(self):
         # retrieve last seen news-item with the same title
         self.dbcur.execute(f"select * from news where title='{self.title}'")
         return self.dbcur.fetchone()
 
-    def is_already_similar_saved(self, search_limit=settings.ROUGH_NUM_NEWS_ON_FRONTPAGE):
+    def is_saved_with_similar_title(
+        self, search_limit=settings.ROUGH_NUM_NEWS_ON_FRONTPAGE
+    ):
         self.dbcur.execute('select * from news order by rowid desc')
         best_ratio, best_news_item = 0, None
         for news_item in self.dbcur.fetchall()[:search_limit]:
@@ -58,6 +60,7 @@ class NewsItem:
             '{self.title}',
             '{self.date}',
             '{self.url}',
+            '{self.summary}',
             '{self.category}',
             '{now}',
             {tg_msg_id}
@@ -65,7 +68,7 @@ class NewsItem:
         )
         self.dbconn.commit()
 
-    def update_on_db(self, fields=['title', 'url']):
+    def update_on_db(self, fields=['title', 'date', 'url', 'summary', 'category']):
         logger.info(f'Updating on DB: {self}')
         set_expr = ', '.join([f"{f} = '{getattr(self, f)}'" for f in fields])
         self.dbcur.execute(f"update news set {set_expr} where tg_msg_id = {self.tg_msg_id}")
@@ -110,7 +113,7 @@ class NewsItem:
                 m = self.bot.edit_message_text(
                     chat_id=settings.CHANNEL_NAME,
                     message_id=self.tg_msg_id,
-                    text=self.as_markdown + ' #editado',
+                    text=self.as_markdown,
                     parse_mode=telegram.ParseMode.MARKDOWN,
                     disable_web_page_preview=False,
                     timeout=settings.TELEGRAM_READ_TIMEOUT,
