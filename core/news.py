@@ -5,12 +5,11 @@ from urllib.parse import urljoin
 import requests
 import telegram
 from bs4 import BeautifulSoup
+from logzero import logger
 
 import settings
-from core import log, utils
+from core import utils
 from core.newsitem import NewsItem
-
-logger = log.init_logger(__name__)
 
 
 class News:

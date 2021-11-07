@@ -3,11 +3,10 @@ import re
 import time
 
 import telegram
+from logzero import logger
 
 import settings
-from core import log, utils
-
-logger = log.init_logger(__name__)
+from core import utils
 
 THIRD_MODULES_EXCEPTION_MSG = 'Ups! Something went wrong'
 
