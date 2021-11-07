@@ -45,6 +45,7 @@ def create_db(db_path=settings.DATABASE, force_delete=False, verbose=True):
         (title text,
         date text,
         url text,
+        summary text,
         category text,
         saved_at datetime,
         tg_msg_id int unique)

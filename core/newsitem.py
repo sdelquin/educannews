@@ -58,6 +58,7 @@ class NewsItem:
             '{self.title}',
             '{self.date}',
             '{self.url}',
+            '{self.summary}',
             '{self.category}',
             '{now}',
             {tg_msg_id}
@@ -65,7 +66,7 @@ class NewsItem:
         )
         self.dbconn.commit()
 
-    def update_on_db(self, fields=['title', 'url']):
+    def update_on_db(self, fields=['title', 'date', 'url', 'summary', 'category']):
         logger.info(f'Updating on DB: {self}')
         set_expr = ', '.join([f"{f} = '{getattr(self, f)}'" for f in fields])
         self.dbcur.execute(f"update news set {set_expr} where tg_msg_id = {self.tg_msg_id}")
