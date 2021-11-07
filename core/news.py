@@ -78,7 +78,7 @@ class News:
             )
 
     def sift_news(self):
-        logger.info('Sifting news')
+        logger.info('Sifting (filtering) news')
         self.news, news = [], self.news[:]
         for news_item in news:
             if ni := news_item.is_saved_with_same_title():
@@ -89,16 +89,17 @@ class News:
                         ni['category'] == news_item.category,
                     )
                 ):
-                    logger.info(f'Ignoring already saved: {news_item}')
+                    logger.debug(f'Ignoring already saved: {news_item}')
                     continue
                 else:
-                    # capture telegram message id to be edited with new url
+                    # capture telegram message id to be edited with new fields
+                    logger.debug(f'Changes detected! Marking to be edited: {news_item}')
                     news_item.tg_msg_id = ni['tg_msg_id']
             else:
                 # news_item and similarity ratio
                 ni, sr = news_item.is_saved_with_similar_title()
                 if ni:
-                    logger.info(f'Found similar news_item [{sr:.2f}]: {news_item}')
+                    logger.debug(f'Found similar news_item [{sr:.2f}]: {news_item}')
                     news_item.tg_msg_id = ni['tg_msg_id']
             self.news.append(news_item)
 
@@ -126,6 +127,7 @@ class News:
             self.rotate_db()
 
     def dispatch_news(self):
+        logger.info('Dispatching news')
         for news_item in self.news:
             if news_item.tg_msg_id:
                 if news_item.edit_msg():
@@ -139,7 +141,8 @@ class News:
             time.sleep(settings.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
 
     def reset(self):
-        """MAKE USE WITH ATTENTION. It will delete every news"""
+        '''MAKE USE WITH ATTENTION. It will delete every news'''
+        logger.warning('Resetting database!')
         self.dbcur.execute('select * from news')
         for newsitem in self.dbcur.fetchall():
             self.bot.delete_message(settings.CHANNEL_NAME, newsitem['tg_msg_id'])
