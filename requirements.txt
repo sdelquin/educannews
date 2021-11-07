@@ -3,5 +3,5 @@ requests
 prettyconf
 python-telegram-bot
 crayons
-docopt
 python-slugify
+logzero

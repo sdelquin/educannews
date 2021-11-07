@@ -8,6 +8,9 @@ from docopt import docopt
 
 from core.db import create_db, init_db
 from core.news import News
+from core.utils import init_logger
+
+logger = init_logger()
 
 arguments = docopt(__doc__)
 
