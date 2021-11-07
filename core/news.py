@@ -84,9 +84,14 @@ class News:
         logger.info('Sifting news')
         self.news, news = [], self.news[:]
         for news_item in news:
-            ni = news_item.is_already_exactly_saved()
-            if ni:
-                if ni['url'] == news_item.url:
+            if ni := news_item.is_saved_with_same_title():
+                if all(
+                    (
+                        ni['url'] == news_item.url,
+                        ni['summary'] == news_item.summary,
+                        ni['category'] == news_item.category,
+                    )
+                ):
                     logger.info(f'Ignoring already saved: {news_item}')
                     continue
                 else:
@@ -94,7 +99,7 @@ class News:
                     news_item.tg_msg_id = ni['tg_msg_id']
             else:
                 # news_item and similarity ratio
-                ni, sr = news_item.is_already_similar_saved()
+                ni, sr = news_item.is_saved_with_similar_title()
                 if ni:
                     logger.info(f'Found similar news_item [{sr:.2f}]: {news_item}')
                     news_item.tg_msg_id = ni['tg_msg_id']
