@@ -5,3 +5,5 @@
 *.log.*
 *.db*
 .pytest_cache
+.artwork
+.DS_Store
