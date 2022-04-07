@@ -38,44 +38,40 @@ class News:
         return os.linesep.join(buffer)
 
     def __parse_single_news(self, news):
-        news_header = news.h3
-        news_summary = news.find('div', 'txt_noticia')
-        link = news_header.a
-
+        '''
+        Estructura de una noticia:
+        news
+          ⌊ a
+              ⌊ h5 (titulo)
+              ⌊ div (resumen)
+        '''
+        title = utils.clean_text(news.a.h5.text)
+        summary = utils.clean_text(news.a.div.text)
         # ensure url is absolute
-        url = urljoin(settings.NEWS_URL, link['href'].strip())
-        title = utils.clean_text(link.contents[4])
-        date = utils.clean_text(link.find('span', 'fecha').string)
-        category = utils.clean_text(link.find('span', 'categorias').string)
-        summary = utils.clean_text(news_summary.text)
+        url = urljoin(settings.NEWS_URL, news.a['href'].strip())
 
-        return url, date, category, title, summary
+        return url, title, summary
 
     def get_news(self, max_news_to_retrieve=None):
         '''
         Estructura de las noticias:
-        div.noticia
-            ⌊ h3.titulo_novedad
-                ⌊ a  -> (href)
-                    ⌊ span.fecha
-                    ⌊ span.categorias
-            ⌊ div.txt_noticia
-                ⌊ p
-                ⌊ p
+        ul.eventos-listado
+        ⌊ li.evento
+            ⌊ a
+                ⌊ h5 (titulo)
+                ⌊ div (resumen)
         '''
 
         logger.info('Getting news from web')
         self.news = []
         result = requests.get(self.url)
         soup = BeautifulSoup(result.content, features='html.parser')
-        all_news = soup.find_all('div', 'noticia')
+        all_news = soup.find_all('li', 'evento')
 
         logger.info('Parsing downloaded news')
         for news in list(reversed(all_news))[:max_news_to_retrieve]:
-            url, date, category, title, summary = self.__parse_single_news(news)
-            self.news.append(
-                NewsItem(url, date, category, title, summary, self.dbconn, self.dbcur)
-            )
+            url, title, summary = self.__parse_single_news(news)
+            self.news.append(NewsItem(url, title, summary, self.dbconn, self.dbcur))
 
     def sift_news(self):
         logger.info('Sifting (filtering) news')
@@ -86,7 +82,6 @@ class News:
                     (
                         ni['url'] == news_item.url,
                         ni['summary'] == news_item.summary,
-                        ni['category'] == news_item.category,
                     )
                 ):
                     logger.debug(f'Ignoring already saved: {news_item}')

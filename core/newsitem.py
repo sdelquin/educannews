@@ -1,5 +1,4 @@
 import datetime
-import re
 import time
 
 import telegram
@@ -12,10 +11,8 @@ THIRD_MODULES_EXCEPTION_MSG = 'Ups! Something went wrong'
 
 
 class NewsItem:
-    def __init__(self, url, date, category, title, summary, dbconn, dbcur):
+    def __init__(self, url, title, summary, dbconn, dbcur):
         self.url = url
-        self.date = date
-        self.category = category
         self.title = title
         self.summary = summary
         self.tg_msg_id = None
@@ -28,7 +25,7 @@ class NewsItem:
         return self.title
 
     def __repr__(self):
-        buf = [self.title, self.url, self.date, self.category]
+        buf = [self.title, self.url]
         return '\n'.join(buf)
 
     def is_saved_with_same_title(self):
@@ -57,29 +54,23 @@ class NewsItem:
         self.dbcur.execute(
             f'''insert into news values (
             '{self.title}',
-            '{self.date}',
             '{self.url}',
             '{self.summary}',
-            '{self.category}',
             '{now}',
             {tg_msg_id}
         )'''
         )
         self.dbconn.commit()
 
-    def update_on_db(self, fields=['title', 'date', 'url', 'summary', 'category']):
+    def update_on_db(self, fields=['title', 'url', 'summary']):
         logger.info(f'Updating on DB: {self}')
         set_expr = ', '.join([f"{f} = '{getattr(self, f)}'" for f in fields])
         self.dbcur.execute(f"update news set {set_expr} where tg_msg_id = {self.tg_msg_id}")
         self.dbconn.commit()
 
     @property
-    def category_as_hash(self):
-        return '#' + re.sub(r'\s*,\s*|\s+', '', self.category.title())
-
-    @property
     def as_markdown(self):
-        return f'[{self.title}]({self.url})\n_{self.summary}_\n{self.category_as_hash}'
+        return f'[{self.title}]({self.url})\n_{self.summary}_'
 
     def send_msg(self):
         m, retry = None, 0

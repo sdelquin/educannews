@@ -42,8 +42,6 @@ def test_telegram_editing(educan_news):
     assert incoming_newsitem['tg_msg_id'] == existing_newsitem['tg_msg_id']
     assert incoming_newsitem['title'] == existing_newsitem['title']
     assert incoming_newsitem['summary'] == existing_newsitem['summary']
-    assert incoming_newsitem['category'] == existing_newsitem['category']
-    assert incoming_newsitem['date'] == existing_newsitem['date']
     assert incoming_newsitem['url'] == new_url
 
 
@@ -71,6 +69,4 @@ def test_similar_news_found(educan_news):
     assert incoming_newsitem['tg_msg_id'] == existing_newsitem['tg_msg_id']
     assert incoming_newsitem['url'] == existing_newsitem['url']
     assert incoming_newsitem['summary'] == existing_newsitem['summary']
-    assert incoming_newsitem['category'] == existing_newsitem['category']
-    assert incoming_newsitem['date'] == existing_newsitem['date']
     assert incoming_newsitem['title'] == new_title
