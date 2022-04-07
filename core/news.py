@@ -27,7 +27,7 @@ class News:
     def _get_num_news_to_delete_when_rotating_db(self):
         return (
             1
-            if settings.MAX_NEWS_TO_SAVE_ON_DB <= 2 * settings.ROUGH_NUM_NEWS_ON_FRONTPAGE
+            if settings.MAX_NEWS_TO_SAVE_ON_DB <= 2 * settings.NEWS_WINDOW_SIZE
             else settings.MAX_NEWS_TO_SAVE_ON_DB // 2
         )
 
@@ -52,7 +52,7 @@ class News:
 
         return url, title, summary
 
-    def get_news(self, max_news_to_retrieve=None):
+    def get_news(self, max_news_to_retrieve=settings.NEWS_WINDOW_SIZE):
         '''
         Estructura de las noticias:
         ul.eventos-listado
@@ -69,7 +69,8 @@ class News:
         all_news = soup.find_all('li', 'evento')
 
         logger.info('Parsing downloaded news')
-        for news in list(reversed(all_news))[:max_news_to_retrieve]:
+        staged_news = reversed(list(all_news)[:max_news_to_retrieve])
+        for news in staged_news:
             url, title, summary = self.__parse_single_news(news)
             self.news.append(NewsItem(url, title, summary, self.dbconn, self.dbcur))
 

@@ -12,7 +12,7 @@ NEWS_URL = config(
 DATABASE = config('DATABASE', default=PROJECT_DIR / 'news.db', cast=Path)
 MAX_NEWS_TO_SAVE_ON_DB = config('MAX_NEWS_TO_SAVE_ON_DB', default=100, cast=int)
 
-ROUGH_NUM_NEWS_ON_FRONTPAGE = config('ROUGH_NUM_NEWS_ON_FRONTPAGE', default=10, cast=int)
+NEWS_WINDOW_SIZE = config('NEWS_WINDOW_SIZE', default=10, cast=int)
 NEWS_SIMILARITY_THRESHOLD = config('NEWS_SIMILARITY_THRESHOLD', default=0.85, cast=float)
 
 BOT_TOKEN = config('BOT_TOKEN', default='put here the token of your bot')

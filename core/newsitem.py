@@ -33,9 +33,7 @@ class NewsItem:
         self.dbcur.execute(f"select * from news where title='{self.title}'")
         return self.dbcur.fetchone()
 
-    def is_saved_with_similar_title(
-        self, search_limit=settings.ROUGH_NUM_NEWS_ON_FRONTPAGE
-    ):
+    def is_saved_with_similar_title(self, search_limit=settings.NEWS_WINDOW_SIZE):
         self.dbcur.execute('select * from news order by rowid desc')
         best_ratio, best_news_item = 0, None
         for news_item in self.dbcur.fetchall()[:search_limit]:
