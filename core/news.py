@@ -71,8 +71,13 @@ class News:
         logger.info('Parsing downloaded news')
         staged_news = reversed(list(all_news)[:max_news_to_retrieve])
         for news in staged_news:
-            url, title, summary = self.__parse_single_news(news)
-            self.news.append(NewsItem(url, title, summary, self.dbconn, self.dbcur))
+            try:
+                url, title, summary = self.__parse_single_news(news)
+            except AttributeError as err:
+                logger.error(f'Error parsing {news}')
+                logger.exception(err)
+            else:
+                self.news.append(NewsItem(url, title, summary, self.dbconn, self.dbcur))
 
     def sift_news(self):
         logger.info('Sifting (filtering) news')
