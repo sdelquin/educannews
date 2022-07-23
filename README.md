@@ -2,9 +2,9 @@
 
 El objetivo de este proyecto es notificar las novedades que se van produciendo en la web de la **Consejería de Educación y Universidades** del Gobierno de Canarias.
 
-Para ello se hace un *scrapping* de la url http://www.gobiernodecanarias.org/educacion/web/ en la que se publican periódicamente las novedades de la Consejería de Educación y Universidades.
+Para ello se hace un _scrapping_ de la url http://www.gobiernodecanarias.org/educacion/web/ en la que se publican periódicamente las novedades de la Consejería de Educación y Universidades.
 
-Se utiliza el lenguaje de programación *Python* y notificaciones mediante un *bot de Telegram*.
+Se utiliza el lenguaje de programación _Python_ y notificaciones mediante un _bot de Telegram_.
 
 ## Modo de uso
 
@@ -16,28 +16,29 @@ https://t.me/educannews
 
 Clonar el repositorio:
 
-~~~console
+```console
 $ git clone git@github.com:sdelquin/educannews.git
-~~~
+```
 
-Crear el *entorno virtual* e instalar las dependencias:
+Crear el _entorno virtual_ e instalar las dependencias:
 
-~~~console
-$ pipenv install
-~~~
+```console
+$ pip install requirements.txt
+```
 
-Crear la *base de datos*:
+Crear la _base de datos_:
 
-~~~console
-$ pipenv run python educannews.py createdb
-~~~
+```console
+$ python educannews.py createdb
+```
+
 > `news.db` will appear in current directory
 
 Establecer configuraciones personales:
 
-~~~console
+```console
 $ vi .env
-~~~
+```
 
 > Esto sobreescribirá variables del fichero `config.py`
 
@@ -45,6 +46,6 @@ $ vi .env
 
 Para lanzar el notificador:
 
-~~~console
-$ pipenv run python educannews.py notify
-~~~
+```console
+$ python educannews.py notify -v
+```
