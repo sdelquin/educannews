@@ -7,3 +7,4 @@
 .pytest_cache
 .artwork
 .DS_Store
+.python-version
