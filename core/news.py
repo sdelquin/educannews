@@ -62,7 +62,7 @@ class News:
         # ensure url is absolute
         url = urljoin(settings.NEWS_URL, news.a['href'].strip())
 
-        return url, date, topic, title, summary
+        return dict(url=url, date=date, topic=topic, title=title, summary=summary)
 
     def get_news(self, max_news_to_retrieve=settings.NEWS_WINDOW_SIZE):
         '''
@@ -85,11 +85,14 @@ class News:
         for news in staged_news:
             try:
                 news_details = self.__parse_single_news(news)
+                if utils.check_if_news_has_to_be_ignored(news_details['title']):
+                    logger.warning(f"Marked to be ignored: {news_details['title']}")
+                    continue
             except AttributeError as err:
                 logger.error(f'Error parsing {news}')
                 logger.exception(err)
             else:
-                self.news.append(NewsItem(*news_details, self.dbconn, self.dbcur))
+                self.news.append(NewsItem(**news_details, dbconn=self.dbconn, dbcur=self.dbcur))
 
     def sift_news(self):
         logger.info('Sifting (filtering) news')

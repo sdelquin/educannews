@@ -96,3 +96,12 @@ def similarity_ratio(text1, text2):
     tokenized_text2 = list({word for word in tokenize(text2) if word not in WORDS_TO_IGNORE})
     sm = difflib.SequenceMatcher(None, tokenized_text1, tokenized_text2)
     return sm.ratio()
+
+
+def check_if_news_has_to_be_ignored(
+    title: str, news_to_ignore: list[str] = settings.NEWS_TO_IGNORE
+) -> bool:
+    for news_title in news_to_ignore:
+        if title.startswith(news_title):
+            return True
+    return False
