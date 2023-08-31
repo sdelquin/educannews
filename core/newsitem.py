@@ -1,7 +1,7 @@
 import datetime
+import re
 import time
 
-import slugify
 import telegram
 from logzero import logger
 
@@ -73,11 +73,13 @@ class NewsItem:
 
     @property
     def topic_as_hashtag(self):
-        return f"#{slugify.slugify(self.topic, separator='_')}"
+        slug_topic = re.sub(r'[ .,;:]', '', self.topic.title())
+        return f"#{slug_topic}"
 
     @property
     def as_markdown(self):
         return f'''✨ {self.date} {self.topic_as_hashtag}
+
 [{self.title}]({self.url})
 _{self.summary}_'''
 
