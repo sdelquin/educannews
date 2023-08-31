@@ -1,4 +1,6 @@
+import datetime
 import os
+import re
 import time
 from urllib.parse import urljoin
 
@@ -16,9 +18,7 @@ class News:
     def __init__(self, dbconn, dbcur):
         logger.info('Building News object')
         self.url = settings.NEWS_URL
-        self.num_news_to_delete_when_rotating_db = (
-            self._get_num_news_to_delete_when_rotating_db()
-        )
+        self.num_news_to_delete_when_rotating_db = self._get_num_news_to_delete_when_rotating_db()
 
         self.dbconn = dbconn
         self.dbcur = dbcur
@@ -37,6 +37,18 @@ class News:
             buffer.append(f'{i + 1}) {news_item}')
         return os.linesep.join(buffer)
 
+    def __parse_news_title(self, title):
+        '''
+        Estructura del título de una noticia:
+        dd/mm/YYYY [Tema] Texto
+        '''
+        if m := re.fullmatch(r'\s*(\d{2}/\d{2}/\d{4})?\s*(?:\[([^]]+)\])?\s*(.*)', title):
+            date = m[1] or datetime.date.today().strftime('%d/%m/%Y')
+            topic = m[2] or 'General'
+            text = m[3]
+            return date, topic, utils.clean_text(text)
+        return AttributeError('News anatomy is not as expected!')
+
     def __parse_single_news(self, news):
         '''
         Estructura de una noticia:
@@ -45,12 +57,12 @@ class News:
               ⌊ h5 (titulo)
               ⌊ div (resumen)
         '''
-        title = utils.clean_text(news.a.h5.text)
+        date, topic, title = self.__parse_news_title(news.a.h5.text)
         summary = utils.clean_text(news.a.div.text)
         # ensure url is absolute
         url = urljoin(settings.NEWS_URL, news.a['href'].strip())
 
-        return url, title, summary
+        return url, date, topic, title, summary
 
     def get_news(self, max_news_to_retrieve=settings.NEWS_WINDOW_SIZE):
         '''
@@ -72,12 +84,12 @@ class News:
         staged_news = reversed(list(all_news)[:max_news_to_retrieve])
         for news in staged_news:
             try:
-                url, title, summary = self.__parse_single_news(news)
+                news_details = self.__parse_single_news(news)
             except AttributeError as err:
                 logger.error(f'Error parsing {news}')
                 logger.exception(err)
             else:
-                self.news.append(NewsItem(url, title, summary, self.dbconn, self.dbcur))
+                self.news.append(NewsItem(*news_details, self.dbconn, self.dbcur))
 
     def sift_news(self):
         logger.info('Sifting (filtering) news')

@@ -1,6 +1,7 @@
 import datetime
 import time
 
+import slugify
 import telegram
 from logzero import logger
 
@@ -11,8 +12,10 @@ THIRD_MODULES_EXCEPTION_MSG = 'Ups! Something went wrong'
 
 
 class NewsItem:
-    def __init__(self, url, title, summary, dbconn, dbcur):
+    def __init__(self, url, date, topic, title, summary, dbconn, dbcur):
         self.url = url
+        self.date = date
+        self.topic = topic
         self.title = title
         self.summary = summary
         self.tg_msg_id = None
@@ -52,6 +55,8 @@ class NewsItem:
         self.dbcur.execute(
             f'''insert into news values (
             '{self.title}',
+            '{self.date}',
+            '{self.topic}',
             '{self.url}',
             '{self.summary}',
             '{now}',
@@ -60,15 +65,21 @@ class NewsItem:
         )
         self.dbconn.commit()
 
-    def update_on_db(self, fields=['title', 'url', 'summary']):
+    def update_on_db(self, fields=['title', 'date', 'topic', 'url', 'summary']):
         logger.info(f'Updating on DB: {self}')
         set_expr = ', '.join([f"{f} = '{getattr(self, f)}'" for f in fields])
         self.dbcur.execute(f"update news set {set_expr} where tg_msg_id = {self.tg_msg_id}")
         self.dbconn.commit()
 
     @property
+    def topic_as_hashtag(self):
+        return f"#{slugify.slugify(self.topic, separator='_')}"
+
+    @property
     def as_markdown(self):
-        return f'[{self.title}]({self.url})\n_{self.summary}_'
+        return f'''✨ {self.date} {self.topic_as_hashtag}
+[{self.title}]({self.url})
+_{self.summary}_'''
 
     def send_msg(self):
         m, retry = None, 0

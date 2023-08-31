@@ -80,8 +80,9 @@ def clean_text(text):
     text = re.sub(r'^[\s.]+', '', text)
     # Dots or whitespaces on right
     text = re.sub(r'[\s.]+$', '', text)
-    # Remove square brackets -> conflict with markdown
-    text = re.sub(r'[\[\]]+', '', text)
+    # Escape square brackets -> conflict with markdown
+    # https://stackoverflow.com/a/49924429
+    text = text.replace('[', '\\[')
 
     return text
 
@@ -91,11 +92,7 @@ def tokenize(text):
 
 
 def similarity_ratio(text1, text2):
-    tokenized_text1 = list(
-        {word for word in tokenize(text1) if word not in WORDS_TO_IGNORE}
-    )
-    tokenized_text2 = list(
-        {word for word in tokenize(text2) if word not in WORDS_TO_IGNORE}
-    )
+    tokenized_text1 = list({word for word in tokenize(text1) if word not in WORDS_TO_IGNORE})
+    tokenized_text2 = list({word for word in tokenize(text2) if word not in WORDS_TO_IGNORE})
     sm = difflib.SequenceMatcher(None, tokenized_text1, tokenized_text2)
     return sm.ratio()
