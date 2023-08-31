@@ -44,7 +44,7 @@ class News:
         '''
         if m := re.fullmatch(r'\s*(\d{2}/\d{2}/\d{4})?\s*(?:\[([^]]+)\])?\s*(.*)', title):
             date = m[1] or datetime.date.today().strftime('%d/%m/%Y')
-            topic = m[2] or 'General'
+            topic = m[2] or settings.DEFAULT_TOPIC
             text = m[3]
             return date, topic, utils.clean_text(text)
         return AttributeError('News anatomy is not as expected!')

@@ -25,3 +25,5 @@ TELEGRAM_READ_TIMEOUT = config('TELEGRAM_READ_TIMEOUT', default=15, cast=int)
 LOGFILE = config('LOGFILE', default=PROJECT_DIR / (PROJECT_NAME + '.log'), cast=Path)
 LOGFILE_SIZE = config('LOGFILE_SIZE', cast=float, default=1e6)
 LOGFILE_BACKUP_COUNT = config('LOGFILE_BACKUP_COUNT', cast=int, default=3)
+
+DEFAULT_TOPIC = config('DEFAULT_TOPIC', default='General')
