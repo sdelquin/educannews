@@ -5,9 +5,7 @@ from prettyconf import config
 PROJECT_DIR = Path(__file__).parent
 PROJECT_NAME = PROJECT_DIR.name
 
-NEWS_URL = config(
-    'NEWS_URL', default='https://www.gobiernodecanarias.org/eucd/novedades_consejeria/'
-)
+NEWS_URL = config('NEWS_URL', default='https://www.gobiernodecanarias.org/educacion/web/index.html')
 
 DATABASE = config('DATABASE', default=PROJECT_DIR / 'news.db', cast=Path)
 MAX_NEWS_TO_SAVE_ON_DB = config('MAX_NEWS_TO_SAVE_ON_DB', default=100, cast=int)
