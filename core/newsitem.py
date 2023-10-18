@@ -53,28 +53,21 @@ class NewsItem:
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%f')
         logger.info(f'Saving on DB: {self}')
         self.dbcur.execute(
-            f'''insert into news values (
-            '{self.title}',
-            '{self.date}',
-            '{self.topic}',
-            '{self.url}',
-            '{self.summary}',
-            '{now}',
-            {tg_msg_id}
-        )'''
+            'insert into news values (?, ?, ?, ?, ?, ?, ?)',
+            (self.title, self.date, self.topic, self.url, self.summary, now, tg_msg_id),
         )
         self.dbconn.commit()
 
     def update_on_db(self, fields=['title', 'date', 'topic', 'url', 'summary']):
         logger.info(f'Updating on DB: {self}')
         set_expr = ', '.join([f"{f} = '{getattr(self, f)}'" for f in fields])
-        self.dbcur.execute(f"update news set {set_expr} where tg_msg_id = {self.tg_msg_id}")
+        self.dbcur.execute(f'update news set {set_expr} where tg_msg_id = {self.tg_msg_id}')
         self.dbconn.commit()
 
     @property
     def topic_as_hashtag(self):
         slug_topic = re.sub(r'[ .,;:]', '', self.topic.title())
-        return f"#{slug_topic}"
+        return f'#{slug_topic}'
 
     @property
     def as_markdown(self):
