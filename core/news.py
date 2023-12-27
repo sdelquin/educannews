@@ -38,10 +38,10 @@ class News:
         return os.linesep.join(buffer)
 
     def __parse_news_title(self, title):
-        '''
+        """
         Estructura del título de una noticia:
         dd/mm/YYYY [Tema] Texto
-        '''
+        """
         if m := re.fullmatch(r'\s*(\d{2}/\d{2}/\d{4})?\s*(?:\[([^]]+)\])?\s*(.*)', title):
             date = m[1] or datetime.date.today().strftime('%d/%m/%Y')
             topic = m[2] or settings.DEFAULT_TOPIC
@@ -50,13 +50,13 @@ class News:
         return AttributeError('News anatomy is not as expected!')
 
     def __parse_single_news(self, news):
-        '''
+        """
         Estructura de una noticia:
         news
           ⌊ a
               ⌊ h5 (titulo)
               ⌊ div (resumen)
-        '''
+        """
         date, topic, title = self.__parse_news_title(news.a.h5.text)
         summary = utils.clean_text(news.a.div.text)
         # ensure url is absolute
@@ -65,14 +65,14 @@ class News:
         return dict(url=url, date=date, topic=topic, title=title, summary=summary)
 
     def get_news(self, max_news_to_retrieve=settings.NEWS_WINDOW_SIZE):
-        '''
+        """
         Estructura de las noticias:
         ul.eventos-listado
         ⌊ li.evento
             ⌊ a
                 ⌊ h5 (titulo)
                 ⌊ div (resumen)
-        '''
+        """
 
         logger.info('Getting news from web')
         self.news = []
@@ -124,16 +124,16 @@ class News:
 
     @property
     def num_news_on_db(self):
-        self.dbcur.execute("select count(*) as size from news")
+        self.dbcur.execute('select count(*) as size from news')
         return self.dbcur.fetchone()['size']
 
     def rotate_db(self):
         self.dbcur.execute(
-            f'''
+            f"""
             delete from news where rowid in
             (select rowid from news order by rowid limit
             {self.num_news_to_delete_when_rotating_db})
-        '''
+        """
         )
         self.dbconn.commit()
 
@@ -157,7 +157,7 @@ class News:
             time.sleep(settings.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
 
     def reset(self):
-        '''MAKE USE WITH ATTENTION. It will delete every news'''
+        """MAKE USE WITH ATTENTION. It will delete every news"""
         logger.warning('Resetting database!')
         self.dbcur.execute('select * from news')
         for newsitem in self.dbcur.fetchall():
