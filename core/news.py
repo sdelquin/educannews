@@ -42,7 +42,7 @@ class News:
         Estructura del título de una noticia:
         dd/mm/YYYY [Tema] Texto
         """
-        if m := re.fullmatch(r'\s*(\d{2}/\d{2}/\d{4})?\s*(?:\[([^]]+)\])?\s*(.*)', title):
+        if m := re.fullmatch(r'\s*(\d{1,2}/\d{1,2}/\d{4})?\s*(?:\[([^]]+)\])?\s*(.*)', title):
             date = m[1] or datetime.date.today().strftime('%d/%m/%Y')
             topic = m[2] or settings.DEFAULT_TOPIC
             text = m[3]
