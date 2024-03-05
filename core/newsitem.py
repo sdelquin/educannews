@@ -12,7 +12,9 @@ THIRD_MODULES_EXCEPTION_MSG = 'Ups! Something went wrong'
 
 
 class NewsItem:
-    def __init__(self, url, date, topic, title, summary, dbconn, dbcur):
+    def __init__(
+        self, url: str, date: datetime.date, topic: str, title: str, summary: str, dbconn, dbcur
+    ):
         self.url = url
         self.date = date
         self.topic = topic
@@ -30,6 +32,22 @@ class NewsItem:
     def __repr__(self):
         buf = [self.title, self.url]
         return '\n'.join(buf)
+
+    @property
+    def fdate(self) -> str:
+        return self.date.strftime('%d/%m/%Y')
+
+    @property
+    def topic_as_hashtag(self) -> str:
+        slug_topic = re.sub(r'[ .,;:]', '', self.topic.title())
+        return f'#{slug_topic}'
+
+    @property
+    def as_markdown(self) -> str:
+        return f"""✨ {self.fdate} {self.topic_as_hashtag}
+
+[{self.title}]({self.url})
+_{self.summary}_"""
 
     def is_saved_with_same_title(self):
         # retrieve last seen news-item with the same title
@@ -54,7 +72,7 @@ class NewsItem:
         logger.info(f'Saving on DB: {self}')
         self.dbcur.execute(
             'insert into news values (?, ?, ?, ?, ?, ?, ?)',
-            (self.title, self.date, self.topic, self.url, self.summary, now, tg_msg_id),
+            (self.title, self.fdate, self.topic, self.url, self.summary, now, tg_msg_id),
         )
         self.dbconn.commit()
 
@@ -63,18 +81,6 @@ class NewsItem:
         set_expr = ', '.join([f"{f} = '{getattr(self, f)}'" for f in fields])
         self.dbcur.execute(f'update news set {set_expr} where tg_msg_id = {self.tg_msg_id}')
         self.dbconn.commit()
-
-    @property
-    def topic_as_hashtag(self):
-        slug_topic = re.sub(r'[ .,;:]', '', self.topic.title())
-        return f'#{slug_topic}'
-
-    @property
-    def as_markdown(self):
-        return f'''✨ {self.date} {self.topic_as_hashtag}
-
-[{self.title}]({self.url})
-_{self.summary}_'''
 
     def send_msg(self):
         m, retry = None, 0

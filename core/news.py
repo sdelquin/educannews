@@ -43,7 +43,10 @@ class News:
         dd/mm/YYYY [Tema] Texto
         """
         if m := re.fullmatch(r'\s*(\d{1,2}/\d{1,2}/\d{4})?\s*(?:\[([^]]+)\])?\s*(.*)', title):
-            date = m[1] or datetime.date.today().strftime('%d/%m/%Y')
+            if date := m[1]:
+                date = datetime.datetime.strptime(date, '%d/%m/%Y').date()
+            else:
+                date = datetime.date.today()
             topic = m[2] or settings.DEFAULT_TOPIC
             text = m[3]
             return date, topic, utils.clean_text(text)
