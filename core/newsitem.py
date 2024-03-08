@@ -95,9 +95,7 @@ _{self.summary}_"""
                     disable_web_page_preview=False,
                     timeout=settings.TELEGRAM_READ_TIMEOUT,
                 )
-            except telegram.error.BadRequest:
-                logger.exception(THIRD_MODULES_EXCEPTION_MSG)
-            except telegram.error.TimedOut:
+            except telegram.error.TelegramError:
                 # message could be correctly delivered: https://goo.gl/TZ7kGR
                 logger.exception(THIRD_MODULES_EXCEPTION_MSG)
                 retry += 1
