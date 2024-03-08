@@ -40,16 +40,19 @@ class News:
     def __parse_news_title(self, title):
         """
         Estructura del título de una noticia:
-        dd/mm/YYYY [Tema] Texto
+        dd/mm/YYYY [Tema1] [Tema2] ... Texto
         """
-        if m := re.fullmatch(r'\s*(\d{1,2}/\d{1,2}/\d{4})?\s*(?:\[([^]]+)\])?\s*(.*)', title):
+        if m := re.fullmatch(r'\s*(\d{1,2}/\d{1,2}/\d{4})?\s*(\[.*\])?\s*(.*)', title):
             if date := m[1]:
                 date = datetime.datetime.strptime(date, '%d/%m/%Y').date()
             else:
                 date = datetime.date.today()
-            topic = m[2] or settings.DEFAULT_TOPIC
+            if topics := m[2]:
+                topics = re.split(r'\]\s*\[', topics.strip('[]'))
+            else:
+                topics = [settings.DEFAULT_TOPIC]
             text = m[3]
-            return date, topic, utils.clean_text(text)
+            return date, topics, utils.clean_text(text)
         return AttributeError('News anatomy is not as expected!')
 
     def __parse_single_news(self, news):
@@ -60,12 +63,12 @@ class News:
               ⌊ h5 (titulo)
               ⌊ div (resumen)
         """
-        date, topic, title = self.__parse_news_title(news.a.h5.text)
+        date, topics, title = self.__parse_news_title(news.a.h5.text)
         summary = utils.clean_text(news.a.div.text)
         # ensure url is absolute
         url = urljoin(settings.NEWS_URL, news.a['href'].strip())
 
-        return dict(url=url, date=date, topic=topic, title=title, summary=summary)
+        return dict(url=url, date=date, topics=topics, title=title, summary=summary)
 
     def get_news(self, max_news_to_retrieve=settings.NEWS_WINDOW_SIZE):
         """

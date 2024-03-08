@@ -12,8 +12,8 @@ def create_db(db_path=settings.DATABASE, force_delete=False, verbose=True):
         if not force_delete:
             print(
                 crayons.red(
-                    f'''Database {db_path} already exists.
-        If you continue it will be DESTROYED!! Continue? [y/N] ''',
+                    f"""Database {db_path} already exists.
+        If you continue it will be DESTROYED!! Continue? [y/N] """,
                     bold=True,
                 ),
                 end='',
@@ -40,16 +40,16 @@ def create_db(db_path=settings.DATABASE, force_delete=False, verbose=True):
     conn, cur = init_db(db_path)
     # table of news
     cur.execute(
-        '''
+        """
         CREATE TABLE news
         (title text,
         date text,
-        topic text,
+        topics text,
         url text,
         summary text,
         saved_at datetime,
         tg_msg_id int unique)
-        '''
+        """
     )
     conn.commit()
 

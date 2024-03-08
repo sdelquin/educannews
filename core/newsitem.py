@@ -13,11 +13,18 @@ THIRD_MODULES_EXCEPTION_MSG = 'Ups! Something went wrong'
 
 class NewsItem:
     def __init__(
-        self, url: str, date: datetime.date, topic: str, title: str, summary: str, dbconn, dbcur
+        self,
+        url: str,
+        date: datetime.date,
+        topics: list[str],
+        title: str,
+        summary: str,
+        dbconn,
+        dbcur,
     ):
         self.url = url
         self.date = date
-        self.topic = topic
+        self.topics = topics
         self.title = title
         self.summary = summary
         self.tg_msg_id = None
@@ -38,13 +45,12 @@ class NewsItem:
         return self.date.strftime('%d/%m/%Y')
 
     @property
-    def topic_as_hashtag(self) -> str:
-        slug_topic = re.sub(r'[ .,;:]', '', self.topic.title())
-        return f'#{slug_topic}'
+    def topics_as_hashtags(self) -> str:
+        return ' '.join(f"#{re.sub(r'[ .,;:]', '', topic.title())}" for topic in self.topics)
 
     @property
     def as_markdown(self) -> str:
-        return f"""✨ {self.fdate} {self.topic_as_hashtag}
+        return f"""✨ {self.fdate} {self.topics_as_hashtags}
 
 [{self.title}]({self.url})
 _{self.summary}_"""
@@ -72,13 +78,28 @@ _{self.summary}_"""
         logger.info(f'Saving on DB: {self}')
         self.dbcur.execute(
             'insert into news values (?, ?, ?, ?, ?, ?, ?)',
-            (self.title, self.fdate, self.topic, self.url, self.summary, now, tg_msg_id),
+            (
+                self.title,
+                self.fdate,
+                self.topics_as_hashtags,
+                self.url,
+                self.summary,
+                now,
+                tg_msg_id,
+            ),
         )
         self.dbconn.commit()
 
-    def update_on_db(self, fields=['title', 'date', 'topic', 'url', 'summary']):
+    def update_on_db(
+        self,
+        fields=dict(
+            title='title', date='fdate', topics='topics_as_hashtags', url='url', summary='summary'
+        ),
+    ):
         logger.info(f'Updating on DB: {self}')
-        set_expr = ', '.join([f"{f} = '{getattr(self, f)}'" for f in fields])
+        set_expr = ', '.join(
+            [f"{db_field} = '{getattr(self, obj_field)}'" for db_field, obj_field in fields.items()]
+        )
         self.dbcur.execute(f'update news set {set_expr} where tg_msg_id = {self.tg_msg_id}')
         self.dbconn.commit()
 
@@ -116,9 +137,7 @@ _{self.summary}_"""
                     disable_web_page_preview=False,
                     timeout=settings.TELEGRAM_READ_TIMEOUT,
                 )
-            except telegram.error.BadRequest:
-                logger.exception(THIRD_MODULES_EXCEPTION_MSG)
-            except telegram.error.TimedOut:
+            except telegram.error.TelegramError:
                 logger.exception(THIRD_MODULES_EXCEPTION_MSG)
                 retry += 1
                 time.sleep(settings.DELAY_BETWEEN_TELEGRAM_DELIVERIES)
