@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ~/.pyenv/versions/educannews/bin/activate
 cd "$(dirname "$0")"
 git pull
+source .venv/bin/activate
 pip install -r requirements.txt
