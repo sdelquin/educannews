@@ -1,8 +1,0 @@
-beautifulsoup4
-requests
-prettyconf
-python-telegram-bot==13.7
-crayons
-python-slugify
-logzero
-typer
