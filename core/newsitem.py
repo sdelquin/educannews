@@ -53,7 +53,7 @@ class NewsItem:
         return f"""✨ {self.fdate} {self.topics_as_hashtags}
 
 [{self.title}]({self.url})
-_{self.summary}_"""
+_{utils.fix_markdown(self.summary)}_"""
 
     def is_saved_with_same_title(self):
         # retrieve last seen news-item with the same title
@@ -108,6 +108,7 @@ _{self.summary}_"""
         while (not m) and (retry <= settings.NUM_TELEGRAM_RETRIES):
             retry_msg = f' (retry {retry})' if retry else ''
             logger.info(f'Sending telegram message{retry_msg}: {self}')
+            print(self.as_markdown)
             try:
                 m = self.bot.send_message(
                     chat_id=settings.CHANNEL_NAME,

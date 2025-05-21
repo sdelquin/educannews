@@ -105,3 +105,11 @@ def check_if_news_has_to_be_ignored(
         if title.startswith(news_title):
             return True
     return False
+
+def fix_markdown(text: str) -> str:
+    MEANING_CHARS = '_'
+    
+    for char in MEANING_CHARS:
+        text = text.replace(char, '')
+    
+    return text
