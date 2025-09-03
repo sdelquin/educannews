@@ -59,12 +59,12 @@ class News:
         """
         Estructura de una noticia:
         news
-          ⌊ a
-              ⌊ h5 (titulo)
-              ⌊ div (resumen)
+          ⌊ h5
+              ⌊ a (titulo)
+          ⌊ div (resumen)
         """
-        date, topics, title = self.__parse_news_title(news.a.h5.text)
-        summary = utils.clean_text(news.a.div.text)
+        date, topics, title = self.__parse_news_title(news.h5.a.text)
+        summary = utils.clean_text(news.div.text)
         # ensure url is absolute
         url = urljoin(settings.NEWS_URL, news.a['href'].strip())
 
@@ -75,9 +75,9 @@ class News:
         Estructura de las noticias:
         ul.eventos-listado
         ⌊ li.evento
-            ⌊ a
-                ⌊ h5 (titulo)
-                ⌊ div (resumen)
+            ⌊ h5
+                ⌊ a (titulo)
+            ⌊ div (resumen)
         """
 
         logger.info('Getting news from web')
@@ -92,7 +92,7 @@ class News:
             try:
                 news_details = self.__parse_single_news(news)
                 if utils.check_if_news_has_to_be_ignored(news_details['title']):
-                    logger.warning(f"Marked to be ignored: {news_details['title']}")
+                    logger.warning(f'Marked to be ignored: {news_details["title"]}')
                     continue
             except AttributeError as err:
                 logger.error(f'Error parsing {news}')
