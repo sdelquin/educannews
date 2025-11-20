@@ -29,4 +29,7 @@ LOGFILE_SIZE = config('LOGFILE_SIZE', cast=float, default=1e6)
 LOGFILE_BACKUP_COUNT = config('LOGFILE_BACKUP_COUNT', cast=int, default=3)
 
 DEFAULT_TOPIC = config('DEFAULT_TOPIC', default='General')
+DEFAULT_TITLE = config('DEFAULT_TITLE', default='Título no disponible')
+DEFAULT_SUMMARY = config('DEFAULT_SUMMARY', default='Resumen no disponible')
+
 NEWS_TO_IGNORE = config('NEWS_TO_IGNORE', default='', cast=config.list)

@@ -2,6 +2,11 @@
 run:
     uv run python main.py notify -v
 
+alias sh := shell
+# Launch shell
+@shell:
+    uv run ipython
+
 # Sync uv
 [macos]
 sync:

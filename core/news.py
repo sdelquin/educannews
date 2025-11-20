@@ -1,12 +1,12 @@
 import datetime
 import os
-import re
 import time
 from urllib.parse import urljoin
 
+import bs4
+import dateutil
 import requests
 import telegram
-from bs4 import BeautifulSoup
 from logzero import logger
 
 import settings
@@ -37,60 +37,74 @@ class News:
             buffer.append(f'{i + 1}) {news_item}')
         return os.linesep.join(buffer)
 
-    def __parse_news_title(self, title):
-        """
-        Estructura del título de una noticia:
-        dd/mm/YYYY [Tema1] [Tema2] ... Texto
-        """
-        if m := re.fullmatch(r'\s*(\d{1,2}/\d{1,2}/\d{4})?\s*(\[.*\])?\s*(.*)', title):
-            if date := m[1]:
-                date = datetime.datetime.strptime(date, '%d/%m/%Y').date()
-            else:
-                date = datetime.date.today()
-            if topics := m[2]:
-                topics = re.split(r'\]\s*\[', topics.strip('[]'))
-            else:
-                topics = [settings.DEFAULT_TOPIC]
-            text = m[3]
-            return date, topics, utils.clean_text(text)
-        return AttributeError('News anatomy is not as expected!')
+    @staticmethod
+    def __parse_news_date(date: bs4.element.Tag | None) -> datetime.date:
+        try:
+            return dateutil.parser.parse(date.text.strip(), dayfirst=True).date()  # type: ignore
+        except (dateutil.parser.ParserError, AttributeError) as err:
+            logger.error('Error parsing date!')
+            logger.exception(err)
+            return datetime.date.today()
 
-    def __parse_single_news(self, news):
+    @staticmethod
+    def __parse_news_topic(topic: bs4.element.Tag | None) -> str:
+        try:
+            return utils.clean_text(topic.text)  # type: ignore
+        except AttributeError as err:
+            logger.error('Error parsing topic!')
+            logger.exception(err)
+            return settings.DEFAULT_TOPIC
+
+    @staticmethod
+    def __parse_news_title(title: bs4.element.Tag | None) -> str:
+        try:
+            return utils.clean_text(title.text)  # type: ignore
+        except AttributeError as err:
+            logger.error('Error parsing title!')
+            logger.exception(err)
+            return settings.DEFAULT_TITLE
+
+    @staticmethod
+    def __parse_news_summary(summary: bs4.element.Tag | None) -> str:
+        try:
+            return utils.clean_text(summary.text)  # type: ignore
+        except AttributeError as err:
+            logger.error('Error parsing summary!')
+            logger.exception(err)
+            return settings.DEFAULT_SUMMARY
+
+    def parse_news(self, news: bs4.element.Tag) -> dict:
         """
         Estructura de una noticia:
-        news
-          ⌊ h5
-              ⌊ a (titulo)
-          ⌊ div (resumen)
+        li.evento (news)
+            ├ div.eventoFecha (date)
+            ├ div.eventoCategoria (topic)
+            ├ h5
+            │   └ a (title)
+            └ div.textoNovedad (summary)
         """
-        date, topics, title = self.__parse_news_title(news.h5.a.text)
-        summary = utils.clean_text(news.div.text)
+        date = self.__parse_news_date(news.select_one('div.eventoFecha'))
+        topic = self.__parse_news_topic(news.select_one('div.eventoCategoria'))
+        title = self.__parse_news_title(news.select_one('h5 a'))
+        summary = self.__parse_news_summary(news.select_one('div.textoNovedad'))
+        link = news.select_one('h5 a')
         # ensure url is absolute
-        url = urljoin(settings.NEWS_URL, news.a['href'].strip())
+        url = urljoin(settings.NEWS_URL, link['href'].strip())  # type: ignore
 
-        return dict(url=url, date=date, topics=topics, title=title, summary=summary)
+        return dict(url=url, date=date, topic=topic, title=title, summary=summary)
 
     def get_news(self, max_news_to_retrieve=settings.NEWS_WINDOW_SIZE):
-        """
-        Estructura de las noticias:
-        ul.eventos-listado
-        ⌊ li.evento
-            ⌊ h5
-                ⌊ a (titulo)
-            ⌊ div (resumen)
-        """
-
         logger.info('Getting news from web')
         self.news = []
-        result = requests.get(self.url)
-        soup = BeautifulSoup(result.content, features='html.parser')
+        response = requests.get(self.url)
+        soup = bs4.BeautifulSoup(response.content, features='html.parser')
         all_news = soup.find_all('li', 'evento')
 
         logger.info('Parsing downloaded news')
         staged_news = reversed(list(all_news)[:max_news_to_retrieve])
         for news in staged_news:
             try:
-                news_details = self.__parse_single_news(news)
+                news_details = self.parse_news(news)
                 if utils.check_if_news_has_to_be_ignored(news_details['title']):
                     logger.warning(f'Marked to be ignored: {news_details["title"]}')
                     continue

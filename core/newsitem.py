@@ -16,7 +16,7 @@ class NewsItem:
         self,
         url: str,
         date: datetime.date,
-        topics: list[str],
+        topic: str,
         title: str,
         summary: str,
         dbconn,
@@ -24,7 +24,7 @@ class NewsItem:
     ):
         self.url = url
         self.date = date
-        self.topics = topics
+        self.topic = topic
         self.title = title
         self.summary = summary
         self.tg_msg_id = None
@@ -45,14 +45,15 @@ class NewsItem:
         return self.date.strftime('%d/%m/%Y')
 
     @property
-    def topics_as_hashtags(self) -> str:
-        return ' '.join(f"#{re.sub(r'[ .,;:]', '', topic.title())}" for topic in self.topics)
+    def topic_as_hashtag(self) -> str:
+        return f'#{re.sub(r"[ .,;:]", "", self.topic.title())}'
 
     @property
     def as_markdown(self) -> str:
-        return f"""✨ {self.fdate} {self.topics_as_hashtags}
+        return f"""✨ {self.fdate} {self.topic_as_hashtag}
 
 [{self.title}]({self.url})
+
 _{utils.fix_markdown(self.summary)}_"""
 
     def is_saved_with_same_title(self):
@@ -81,7 +82,7 @@ _{utils.fix_markdown(self.summary)}_"""
             (
                 self.title,
                 self.fdate,
-                self.topics_as_hashtags,
+                self.topic_as_hashtag,
                 self.url,
                 self.summary,
                 now,
@@ -93,7 +94,7 @@ _{utils.fix_markdown(self.summary)}_"""
     def update_on_db(
         self,
         fields=dict(
-            title='title', date='fdate', topics='topics_as_hashtags', url='url', summary='summary'
+            title='title', date='fdate', topic='topic_as_hashtag', url='url', summary='summary'
         ),
     ):
         logger.info(f'Updating on DB: {self}')
