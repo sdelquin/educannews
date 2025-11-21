@@ -44,7 +44,7 @@ def create_db(db_path=settings.DATABASE, force_delete=False, verbose=True):
         CREATE TABLE news
         (title text,
         date text,
-        topics text,
+        topic text,
         url text,
         summary text,
         saved_at datetime,
