@@ -40,7 +40,7 @@ class News:
     @staticmethod
     def __parse_news_date(date: bs4.element.Tag | None) -> datetime.date:
         try:
-            return dateutil.parser.parse(date.text.strip(), dayfirst=True).date()  # type: ignore
+            return dateutil.parser.parse(date.text.strip(), dayfirst=True).date()
         except (dateutil.parser.ParserError, AttributeError) as err:
             logger.error('Error parsing date!')
             logger.exception(err)
@@ -49,7 +49,7 @@ class News:
     @staticmethod
     def __parse_news_topic(topic: bs4.element.Tag | None) -> str:
         try:
-            return utils.clean_text(topic.text)  # type: ignore
+            return utils.clean_text(topic.text)
         except AttributeError as err:
             logger.error('Error parsing topic!')
             logger.exception(err)
@@ -58,7 +58,7 @@ class News:
     @staticmethod
     def __parse_news_title(title: bs4.element.Tag | None) -> str:
         try:
-            return utils.clean_text(title.text)  # type: ignore
+            return utils.clean_text(title.text)
         except AttributeError as err:
             logger.error('Error parsing title!')
             logger.exception(err)
@@ -67,7 +67,7 @@ class News:
     @staticmethod
     def __parse_news_summary(summary: bs4.element.Tag | None) -> str:
         try:
-            return utils.clean_text(summary.text)  # type: ignore
+            return utils.clean_text(summary.text)
         except AttributeError as err:
             logger.error('Error parsing summary!')
             logger.exception(err)
@@ -85,11 +85,15 @@ class News:
         """
         date = self.__parse_news_date(news.select_one('div.eventoFecha'))
         topic = self.__parse_news_topic(news.select_one('div.eventoCategoria'))
-        title = self.__parse_news_title(news.select_one('h5 a'))
+        title = self.__parse_news_title(news.select_one('h5'))
         summary = self.__parse_news_summary(news.select_one('div.textoNovedad'))
-        link = news.select_one('h5 a')
-        # ensure url is absolute
-        url = urljoin(settings.NEWS_URL, link['href'].strip())  # type: ignore
+
+        if link := news.select_one('h5 a'):
+            # ensure url is absolute
+            url = urljoin(settings.NEWS_URL, link['href'].strip())
+        else:
+            logger.warning('No link found for news item. Using default url')
+            url = settings.NEWS_URL
 
         return dict(url=url, date=date, topic=topic, title=title, summary=summary)
 

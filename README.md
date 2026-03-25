@@ -29,7 +29,7 @@ $ pip install requirements.txt
 Crear la _base de datos_:
 
 ```console
-$ python educannews.py createdb
+$ python main.py createdb
 ```
 
 > `news.db` will appear in current directory
@@ -47,5 +47,5 @@ $ vi .env
 Para lanzar el notificador:
 
 ```console
-$ python educannews.py notify -v
+$ python main.py notify -v
 ```
